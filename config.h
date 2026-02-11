@@ -36,6 +36,7 @@ typedef struct {
     char **labels;       // 動態二維陣列
     int label_count;     // 標籤數量
     int tally_count;     // 一行有多少數據 
+    int total_count;     // 總共有多少數據 
 } FileInfo;
 
 /* =================  initial functions  ================= */
