@@ -134,9 +134,8 @@ FileInfo get_file_info(const char *path) {
                     int idx = 0;
                     while (token && idx < report.label_count) {
                         if (strcmp(token, "nps") != 0) {
-                            report.labels[idx++] = strdup(token);
-                            
-                            if (report.labels[idx]) idx++;
+                            report.labels[idx] = strdup(token);
+                            if (report.labels[idx] != NULL)  idx++;
                         }
                         token = strtok(NULL, " \t\n");
                     }
@@ -478,4 +477,5 @@ void exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myDat
     fclose(fp);
     printf("\n報告已產生：%s\n", out_path);
 }
+
 
