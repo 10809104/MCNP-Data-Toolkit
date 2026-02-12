@@ -475,8 +475,7 @@ void exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myDat
             const char *cell1 = (origin->table[r][1].type == TYPE_STRING) ? origin->table[r][1].data.s : "";
             fprintf(fp, "%s,%s", cell0 ? cell0 : "", cell1 ? cell1 : "");
         } else {
-            // origin 較短，補足左側兩欄空位
-            fprintf(fp, ",,");
+            fprintf(fp, ",");
         }
 
         // --- B. 橫向輸出各個解析檔案的數據 ---

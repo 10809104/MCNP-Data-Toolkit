@@ -12,6 +12,8 @@
 #include "config.h"
 #include "tools.h"
 
+#define MAX_PATH 260
+
 // 定義 UI 元件 ID
 #define ID_LISTBOX  101
 #define ID_BTN_OK   102
@@ -73,19 +75,29 @@ void SetDefaultFont(HWND hwnd) {
  */
 int SelectSourceFile(HWND hwnd, char* outPath) {
     OPENFILENAME ofn;
-    char szFile[260] = {0};
+    char szFile[MAX_PATH] = {0};
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "CSV Files (*.csv)\0*.csv\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFilter = "only CSV Files (xxx.csv)\0*.csv\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-    if (GetOpenFileName(&ofn)) {
-        strcpy(outPath, ofn.lpstrFile);
-        return 1;
-    }
+	if (GetOpenFileName(&ofn)) {
+	    // 1. 先取得副檔名位置
+	    char *ext = strrchr(ofn.lpstrFile, '.');
+	    
+	    // 2. 檢查副檔名是否存在，且是否為 .csv (不分大小寫)
+	    if (ext != NULL && _stricmp(ext, ".csv") == 0) {
+	        strcpy(outPath, ofn.lpstrFile);
+	        return 1;
+	    } else {
+	        // 如果選錯了，彈出警告
+	        MessageBox(hwnd, "錯誤：請選擇有效的 CSV 檔案！", "格式不符", MB_OK | MB_ICONERROR);
+	        return 0;
+	    }
+	}
     return 0;
 }
 
@@ -312,6 +324,7 @@ int main() {
     AllocConsole();
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     freopen("CONOUT$", "w", stdout);
+    
     SetConsoleTitle("卷卷又糖糖");
 	
     // 神獸守護畫面
@@ -331,9 +344,12 @@ int main() {
     setColor(LOG_INFO);
     printf(" __________________________________________________________ \n");
     printf("|                                                          |\n");
-    printf("|         M R C P   D A T A   T O O L K I T   v2.6         |\n");
+    printf("|         M R C P   D A T A   T O O L K I T   v2.7         |\n");
     printf("|__________________________________________________________|\n\n");
     setColor(LOG_NORMAL);
+	
+	// 檢查更新 
+	CheckForUpdates();
 
     // 檢查預設檔案
     FILE *f = fopen("source.csv", "r");

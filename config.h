@@ -1,6 +1,22 @@
 /* ================= KikKoh @2026 =================
 ================ 版權所有，翻印必究 =============== */
 
+#include <wininet.h>
+#include <urlmon.h>
+
+#pragma comment(lib, "wininet.lib")
+#pragma comment(lib, "urlmon.lib")
+#pragma comment(lib, "shell32.lib")
+
+// ===== 定義目標 =====
+// 權限盾牌 
+#ifndef MB_ICONSHIELD
+#define MB_ICONSHIELD 0x0000004CL
+#endif
+// 版本目標
+#define CURRENT_VERSION "v2.7"
+#define VERSION_URL "https://raw.githubusercontent.com/10809104/MCNP-Data-Toolkit/main/version.txt"
+
 /* ================= 資料結構 ================= */
 // 定義資料型別枚舉，用來標記 Cell 目前儲存的是哪種資料
 typedef enum {
@@ -133,4 +149,196 @@ void freeTableSet(TableSet* ts) {
     // 釋放表格陣列與管理結構
     free(ts->tables);
     free(ts);
+}
+
+/**
+ * 判斷是否為管理員
+ */
+BOOL IsRunningAsAdmin()
+{
+    BOOL isAdmin = FALSE;
+    PSID adminGroup = NULL;
+
+    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+
+    if (AllocateAndInitializeSid(&NtAuthority,
+                                 2,
+                                 SECURITY_BUILTIN_DOMAIN_RID,
+                                 DOMAIN_ALIAS_RID_ADMINS,
+                                 0,0,0,0,0,0,
+                                 &adminGroup))
+    {
+        CheckTokenMembership(NULL, adminGroup, &isAdmin);
+        FreeSid(adminGroup);
+    }
+
+    return isAdmin;
+}
+
+/**
+ * 版本更新
+ */
+void PerformUpdate(const char* downloadUrl) 
+{ 
+    char currentExe[MAX_PATH] = {0}; 
+    char tempPath[MAX_PATH] = {0}; 
+    char newExePath[MAX_PATH] = {0}; 
+    char batPath[MAX_PATH] = {0}; 
+
+    GetModuleFileName(NULL, currentExe, MAX_PATH); 
+    
+    printf("[UPDATE] Downloading new version... Please wait.\n");
+    // --- 1. 權限檢查 ---
+    // 嘗試在 exe 所在目錄建立測試檔案，判斷是否有寫入權限
+    char testFilePath[MAX_PATH];
+    sprintf(testFilePath, "%s.tmp", currentExe);
+    FILE *testFile = fopen(testFilePath, "w");
+    if (!testFile) {
+        int result = MessageBox(NULL, "更新需要管理員權限，是否以管理員身份重新啟動並更新？", "權限不足", MB_YESNO | MB_ICONSHIELD);
+        if (result == IDYES) {
+            // 使用 "runas" 觸發 UAC 提升權限重新啟動自己
+            if ((INT_PTR)ShellExecute(NULL, "runas", currentExe, NULL, NULL, SW_SHOWNORMAL) > 32) {
+                ExitProcess(0);
+            }
+        }
+        return; // 使用者選否或啟動失敗則取消更新
+    } else {
+        fclose(testFile);
+        remove(testFilePath); // 測試成功後刪除
+    }
+
+    // --- 2. 下載流程 ---
+    GetTempPath(MAX_PATH, tempPath); 
+    sprintf(newExePath, "%sMRCP_Update_Temp.exe", tempPath); 
+    sprintf(batPath, "%supdate_mrcp.bat", tempPath); 
+
+    printf("[UPDATE] Downloading new version...\n"); 
+    HRESULT hr = URLDownloadToFile(NULL, downloadUrl, newExePath, 0, NULL); 
+
+    if (FAILED(hr)) { 
+        MessageBox(NULL, "下載失敗，請檢查網路連線或手動更新。", "錯誤", MB_ICONERROR); 
+        return; 
+    } 
+
+    // --- 3. 建立自毀式更新腳本 ---
+    FILE* f = fopen(batPath, "w"); 
+    if (!f) { 
+        MessageBox(NULL, "無法建立臨時指令腳本。", "錯誤", MB_ICONERROR); 
+        return; 
+    } 
+
+    // 腳本邏輯：無限循環直到舊版被刪除 -> 移動新版覆蓋舊版 -> 啟動新版 -> 刪除腳本自己
+    fprintf(f, 
+        "@echo off\n" 
+        "title MRCP Updater\n"
+        "echo 正在等待程式關閉並套用更新...\n" 
+        ":loop\n" 
+        "del \"%s\" >nul 2>&1\n" 
+        "if exist \"%s\" (\n" 
+        "  timeout /t 1 /nobreak >nul\n" 
+        "  goto loop\n" 
+        ")\n" 
+        "move /Y \"%s\" \"%s\" >nul\n" 
+        "start \"\" \"%s\"\n" 
+        "del \"%%~f0\" & exit\n", // 這裡使用 & exit 確保指令執行完立即關閉
+        currentExe, 
+        currentExe, 
+        newExePath, 
+        currentExe, 
+        currentExe 
+    ); 
+    fclose(f); 
+
+    // --- 4. 執行更新 ---
+    // 使用 SW_HIDE 讓使用者看不到黑色視窗閃過
+    ShellExecute(NULL, "open", batPath, NULL, NULL, SW_HIDE); 
+
+    ExitProcess(0); 
+}
+
+/**
+ * 版本檢查
+ */
+void CheckForUpdates()
+{
+    printf("[SYSTEM] Checking for updates...\n");
+
+    HINTERNET hInternet = InternetOpen("MRCP_Tool",
+                                       INTERNET_OPEN_TYPE_DIRECT,
+                                       NULL, NULL, 0);
+
+    if (!hInternet) {
+        printf("InternetOpen failed.\n");
+        return;
+    }
+
+    HINTERNET hConnect = InternetOpenUrl(hInternet,
+                                         VERSION_URL,
+                                         NULL,
+                                         0,
+                                         INTERNET_FLAG_RELOAD,
+                                         0);
+
+    if (!hConnect) {
+        printf("Unable to connect to version server.\n");
+        InternetCloseHandle(hInternet);
+        return;
+    }
+
+    char remoteVersion[32] = {0};
+    DWORD bytesRead = 0;
+
+    if (!InternetReadFile(hConnect,
+                          remoteVersion,
+                          sizeof(remoteVersion) - 1,
+                          &bytesRead))
+    {
+        printf("Failed to read version info.\n");
+        InternetCloseHandle(hConnect);
+        InternetCloseHandle(hInternet);
+        return;
+    }
+
+    remoteVersion[bytesRead] = '\0';
+
+    // 去除換行
+    remoteVersion[strcspn(remoteVersion, "\r\n")] = 0;
+
+    if (strlen(remoteVersion) == 0) {
+        printf("Invalid version data.\n");
+        InternetCloseHandle(hConnect);
+        InternetCloseHandle(hInternet);
+        return;
+    }
+
+    printf("Remote version: %s\n", remoteVersion);
+
+    if (strcmp(remoteVersion, CURRENT_VERSION) != 0)
+    {
+        char msg[256];
+        sprintf(msg,
+                "偵測到新版本：%s\n目前版本：%s\n是否立即更新？",
+                remoteVersion,
+                CURRENT_VERSION);
+
+        int result = MessageBox(NULL,
+                                msg,
+                                "發現更新",
+                                MB_YESNO | MB_ICONQUESTION);
+
+        if (result == IDYES)
+        {
+            const char* exeUrl =
+                "https://github.com/10809104/MCNP-Data-Toolkit/releases/latest/download/MRCP_Tool.exe";
+
+            PerformUpdate(exeUrl);
+        }
+    }
+    else
+    {
+        printf("You are using the latest version.\n");
+    }
+
+    InternetCloseHandle(hConnect);
+    InternetCloseHandle(hInternet);
 }
