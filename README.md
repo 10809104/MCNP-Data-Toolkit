@@ -1,4 +1,4 @@
-# MRCP Data Toolkit v2.7.1
+# MRCP Data Toolkit v2.7.2
 
 **MRCP Data Toolkit** 是一款專為核能與醫學物理工程研究設計的高效能數據整合工具。它能將 MRCP 模擬產生的海量文字輸出檔案（`.o` 檔）轉化為結構化的科研報表。透過 C 語言的強大解析能力與 PowerShell 的 Excel 自動化技術，大幅縮短數據整理時間。
 
