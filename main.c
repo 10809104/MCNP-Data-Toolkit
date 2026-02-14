@@ -1,5 +1,8 @@
 /* ================= KikKoh @2026 =================
    ================ 最終版：支援複選資料夾批次處理 ============ */
+#define UNICODE
+#define _UNICODE
+
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,61 +74,51 @@ void SetDefaultFont(HWND hwnd) {
 }
 
 /**
- * 開啟檔案選取對話框
+ * 開啟檔案選取對話框 (Unicode 版)
  */
-int SelectSourceFile(HWND hwnd, char* outPath) {
-    OPENFILENAME ofn;
-    char szFile[MAX_PATH] = {0};
+int SelectSourceFile(HWND hwnd, WCHAR* outPath) {
+    OPENFILENAMEW ofn;
+    WCHAR szFile[MAX_PATH] = {0};
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "only CSV Files (xxx.csv)\0*.csv\0";
+    ofn.nMaxFile = sizeof(szFile)/sizeof(WCHAR);
+    ofn.lpstrFilter = L"CSV Files (*.csv)\0*.csv\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-	if (GetOpenFileName(&ofn)) {
-	    // 1. 先取得副檔名位置
-	    char *ext = strrchr(ofn.lpstrFile, '.');
-	    
-	    // 2. 檢查副檔名是否存在，且是否為 .csv (不分大小寫)
-	    if (ext != NULL && _stricmp(ext, ".csv") == 0) {
-	        strcpy(outPath, ofn.lpstrFile);
-	        return 1;
-	    } else {
-	        // 如果選錯了，彈出警告
-	        MessageBox(hwnd, "錯誤：請選擇有效的 CSV 檔案！", "格式不符", MB_OK | MB_ICONERROR);
-	        return 0;
-	    }
-	}
+
+    if (GetOpenFileNameW(&ofn)) {
+        WCHAR *ext = wcsrchr(ofn.lpstrFile, L'.');
+        if (ext && _wcsicmp(ext, L".csv") == 0) {
+            wcscpy(outPath, ofn.lpstrFile);
+            return 1;
+        } else {
+            MessageBoxW(hwnd, L"錯誤：請選擇有效的 CSV 檔案！", L"格式不符", MB_OK | MB_ICONERROR);
+            return 0;
+        }
+    }
     return 0;
 }
 
 // --- 自定義按鈕文字的 Hook 邏輯 ---
 HHOOK hMsgBoxHook;
 
+/** 自訂 MessageBox 按鈕文字 Hook (Unicode) */
 LRESULT CALLBACK MsgBoxHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HCBT_ACTIVATE) {
         HWND hwndMsgBox = (HWND)wParam;
-        // 將 IDOK (原本的確定) 改為 "萬歲！"
-        if (GetDlgItem(hwndMsgBox, IDOK)) 
-            SetDlgItemText(hwndMsgBox, IDOK, "萬歲！");
-        // 將 IDCANCEL (原本的取消) 改為 "我要延畢..."
-        if (GetDlgItem(hwndMsgBox, IDCANCEL)) 
-            SetDlgItemText(hwndMsgBox, IDCANCEL, "我要延畢...");
+        if (GetDlgItem(hwndMsgBox, IDOK)) SetDlgItemTextW(hwndMsgBox, IDOK, L"萬歲！");
+        if (GetDlgItem(hwndMsgBox, IDCANCEL)) SetDlgItemTextW(hwndMsgBox, IDCANCEL, L"我要延畢...");
         return 0;
     }
-    return CallNextHookEx(hMsgBoxHook, nCode, wParam, lParam);
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-// 封裝成一個特殊的呼叫函數
+/** 顯示畢業視窗 */
 int ShowGraduationDialog(HWND hwnd) {
-    hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxHookProc, NULL, GetCurrentThreadId());
-    // 這裡必須使用 MB_OKCANCEL 才會出現兩個按鈕供我們改名
-    int result = MessageBox(hwnd, 
-                    "恭喜操作完成，可以順利畢業了！", 
-                    "順利執行完畢", 
-                    MB_OKCANCEL | MB_ICONINFORMATION);
+    HHOOK hMsgBoxHook = SetWindowsHookExW(WH_CBT, MsgBoxHookProc, NULL, GetCurrentThreadId());
+    int result = MessageBoxW(hwnd, L"恭喜操作完成，可以順利畢業了！", L"順利執行完畢", MB_OKCANCEL | MB_ICONINFORMATION);
     UnhookWindowsHookEx(hMsgBoxHook);
     return result;
 }
@@ -361,61 +354,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
 }
 
-// --- 主程式進入點 ---
-int main() {
-	SetConsoleOutputCP(CP_UTF8);
-	SetConsoleCP(CP_UTF8);
-	system("chcp 65001 > nul");
-
+// --- 主程式 ---
+int wmain() { // 使用 wmain 支援 Unicode 命令列
     AllocConsole();
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     freopen("CONOUT$", "w", stdout);
-    
-    SetConsoleTitle("卷卷又糖糖");
-	
+
+    SetConsoleTitleW(L"卷卷又糖糖");
+
     // 神獸守護畫面
     setColor(LOG_SUCCESS);
-	printf("                /\\_/\\      ___      /\\_/\\\n");
-	printf("               ( o.o )   /   \\    ( o.o )\n");
-	printf("                > ^ <   / /^\\ \\    > ^ <\n");
-	printf("             ___/     \\_/ /_\\ \\_/     \\___\n");
-	printf("            /  /|       (  * )       |\\  \\\n");
-	printf("           /  / |        \\___/        | \\  \\\n");
-	printf("          (  (  |      Protect Code!  |  )  )\n");
-	printf("           \\  \\ |     Keep Bug Free    | /  /\n");
-	printf("            \\__\\|_____________________|/__/\n");
-	printf("                    神獸守護，程式不閃退!\n");
-	
-    // 標題裝飾
-    setColor(LOG_INFO);
-    printf(" __________________________________________________________ \n");
-    printf("|                                                          |\n");
-    printf("|         M C N P   D A T A   T O O L K I T   v2.7.2       |\n");
-    printf("|__________________________________________________________|\n\n");
+    printf("                /\\_/\\      ___      /\\_/\\\n");
+    printf("               ( o.o )   /   \\    ( o.o )\n");
+    printf("                > ^ <   / /^\\ \\    > ^ <\n");
+    printf("             ___/     \\_/ /_\\ \\_/     \\___\n");
+    printf("                    神獸守護，程式不閃退!\n");
     setColor(LOG_NORMAL);
-	
-	// 檢查更新 
-	CheckForUpdates();
 
     // 檢查預設檔案
-    FILE *f = fopen("source.csv", "r");
+    FILE* f = _wfopen(L"source.csv", L"r");
     if (f) {
         logMessage(LOG_INFO, "INFO", "Default 'source.csv' detected.");
-        strncpy(G_SelectedSourcePath, "source.csv", sizeof(G_SelectedSourcePath)-1);
-		G_SelectedSourcePath[sizeof(G_SelectedSourcePath)-1] = '\0';
+        wcscpy(G_SelectedSourcePath, L"source.csv");
         fclose(f);
     } else {
         logMessage(LOG_WARN, "WARN", "'source.csv' missing. Requesting user input...");
-        MessageBox(NULL, "偵測不到 source.csv 檔案！\n請點擊確定後手動選取來源 CSV。", "找不到檔案", MB_OK | MB_ICONINFORMATION);
-        
+        MessageBoxW(NULL, L"偵測不到 source.csv 檔案！\n請點擊確定後手動選取來源 CSV。", L"找不到檔案", MB_OK | MB_ICONINFORMATION);
+
         if (!SelectSourceFile(NULL, G_SelectedSourcePath)) {
             logMessage(LOG_ERROR, "FATAL", "User cancelled selection. Exiting.");
-            MessageBox(NULL, "未選取來源檔案，程式將結束。", "Error", MB_OK | MB_ICONERROR);
+            MessageBoxW(NULL, L"未選取來源檔案，程式將結束。", L"Error", MB_OK | MB_ICONERROR);
             return 0;
         }
     }
 
-    logMessage(LOG_SUCCESS, "READY", "Current source: %s", G_SelectedSourcePath);
+    logMessage(LOG_SUCCESS, "READY", "Current source: %ls", G_SelectedSourcePath);
     printf(" Waiting for user interaction...\n\n");
 
     // 註冊視窗類別與建立視窗
@@ -466,4 +442,5 @@ int main() {
     FreeConsole();
     return 0;
 }
+
 
