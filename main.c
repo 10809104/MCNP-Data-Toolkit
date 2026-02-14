@@ -1,7 +1,5 @@
 /* ================= KikKoh @2026 =================
-   ================ æœ€çµ‚ç‰ˆï¼šæ”¯æ´è¤‡é¸è³‡æ–™å¤¾æ‰¹æ¬¡è™•ç† ============ */
-
-// é—œéµï¼šä¸å†å…¨åŸŸå®šç¾© UNICODEï¼Œæ”¹ç”±é¡¯å¼å‘¼å« W ç‰ˆæœ¬ API è§£æ±ºè¡çª
+   ================ ³Ì²×ª©¡G¤ä´©½Æ¿ï¸ê®Æ§¨§å¦¸³B²z ============ */
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,39 +8,44 @@
 #include <dirent.h>
 #include <commdlg.h>
 #include <time.h>
-#include <stdarg.h>
 
 #include "config.h"
 #include "tools.h"
 
 #define MAX_PATH 260
 
-// å®šç¾© UI å…ƒä»¶ ID
+// ©w¸q UI ¤¸¥ó ID
 #define ID_LISTBOX  101
 #define ID_BTN_OK   102
 #define ID_BTN_HELP 103
 
-// ===== é¡è‰²å®šç¾© =====
-#define LOG_INFO    11 // æ·ºè—
-#define LOG_SUCCESS 10 // ç¶ è‰²
-#define LOG_WARN    14 // é»ƒè‰²
-#define LOG_ERROR   12 // ç´…è‰²
-#define LOG_SYSTEM  9  // è—è‰²
-#define LOG_NORMAL  7  // é è¨­ç™½è‰²
+// ===== ÃC¦â©w¸q (Console Color Codes) =====
+#define LOG_INFO    11 // ²LÂÅ
+#define LOG_SUCCESS 10 // ºñ¦â
+#define LOG_WARN    14 // ¶À¦â
+#define LOG_ERROR   12 // ¬õ¦â
+#define LOG_SYSTEM  9  // ÂÅ¦â
+#define LOG_NORMAL  7  // ¹w³]¥Õ¦â
 
-// --- å…¨åŸŸè®Šæ•¸ ---
+// --- ¥ş°ìÅÜ¼Æ ---
 HWND hListBox, hBtnOk;
 HFONT hFont;
-// é€™è£¡ç¶­æŒ charï¼Œå› ç‚ºä½ çš„ loadSourceCSV å…§éƒ¨ä½¿ç”¨çš„æ˜¯ char*
-char G_SelectedSourcePath[MAX_PATH] = {0}; 
+char G_SelectedSourcePath[MAX_PATH] = {0}; // ¦sÀx¨Ó·½ CSV ¸ô®|
 HANDLE hConsole;
 
-/** è®Šæ›´ Console è¼¸å‡ºé¡è‰² */
+/**
+ * ÅÜ§ó Console ¿é¥XÃC¦â
+ */
 void setColor(int color) {
     SetConsoleTextAttribute(hConsole, color);
 }
 
-/** æ ¼å¼åŒ–è¼¸å‡ºæ—¥èªŒ */
+/**
+ * ®æ¦¡¤Æ¿é¥X¤é»x
+ * @param color ÃC¦â¥N½X
+ * @param tag ¼ĞÅÒ¤å¦r (¨Ò¦p INFO, WARN)
+ * @param fmt ®æ¦¡¤Æ¦r¦ê
+ */
 void logMessage(int color, const char* tag, const char* fmt, ...) {
     setColor(color);
     printf("[%s] ", tag);
@@ -56,77 +59,105 @@ void logMessage(int color, const char* tag, const char* fmt, ...) {
     setColor(LOG_NORMAL);
 }
 
-// --- è¦–çª—è¼”åŠ©å‡½å¼ ---
-/** è¨­å®šè¦–çª—å…ƒä»¶ç‚ºå¾®è»Ÿæ­£é»‘é«” */
+// --- µøµ¡»²§U¨ç¦¡ ---
+/**
+ * ³]©wµøµ¡¤¸¥ó¬°·L³n¥¿¶ÂÅé
+ */
 void SetDefaultFont(HWND hwnd) {
-    hFont = CreateFontW(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, 
+    hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, 
                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
-                       VARIABLE_PITCH | FF_SWISS, L"Microsoft JhengHei");
+                       VARIABLE_PITCH | FF_SWISS, "Microsoft JhengHei");
     SendMessage(hwnd, WM_SETFONT, (WPARAM)hFont, TRUE);
 }
 
-/** é–‹å•Ÿæª”æ¡ˆé¸å–å°è©±æ¡† (æ ¸å¿ƒè½‰æ¥é‚è¼¯) */
+/**
+ * ¶}±ÒÀÉ®×¿ï¨ú¹ï¸Ü®Ø
+ */
 int SelectSourceFile(HWND hwnd, char* outPath) {
-    OPENFILENAMEW ofn;
-    WCHAR szFile[MAX_PATH] = {0};
+    OPENFILENAME ofn;
+    char szFile[MAX_PATH] = {0};
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = L"CSV Files (*.csv)\0*.csv\0";
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "only CSV Files (xxx.csv)\0*.csv\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-    if (GetOpenFileNameW(&ofn)) {
-        // å–å¾— Unicode è·¯å¾‘å¾Œï¼Œè½‰å› char çµ¦ä½ çš„å¾ŒçºŒå‡½å¼ä½¿ç”¨
-        WideCharToMultiByte(CP_ACP, 0, ofn.lpstrFile, -1, outPath, MAX_PATH, NULL, NULL);
-        return 1;
-    }
+	if (GetOpenFileName(&ofn)) {
+	    // 1. ¥ı¨ú±o°ÆÀÉ¦W¦ì¸m
+	    char *ext = strrchr(ofn.lpstrFile, '.');
+	    
+	    // 2. ÀË¬d°ÆÀÉ¦W¬O§_¦s¦b¡A¥B¬O§_¬° .csv (¤£¤À¤j¤p¼g)
+	    if (ext != NULL && _stricmp(ext, ".csv") == 0) {
+	        strcpy(outPath, ofn.lpstrFile);
+	        return 1;
+	    } else {
+	        // ¦pªG¿ï¿ù¤F¡A¼u¥XÄµ§i
+	        MessageBox(hwnd, "¿ù»~¡G½Ğ¿ï¾Ü¦³®Äªº CSV ÀÉ®×¡I", "®æ¦¡¤£²Å", MB_OK | MB_ICONERROR);
+	        return 0;
+	    }
+	}
     return 0;
 }
 
-// --- è‡ªå®šç¾©æŒ‰éˆ•æ–‡å­—çš„ Hook é‚è¼¯ ---
+// --- ¦Û©w¸q«ö¶s¤å¦rªº Hook ÅŞ¿è ---
+HHOOK hMsgBoxHook;
+
 LRESULT CALLBACK MsgBoxHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HCBT_ACTIVATE) {
         HWND hwndMsgBox = (HWND)wParam;
-        SetDlgItemTextW(hwndMsgBox, IDOK, L"è¬æ­²ï¼");
-        SetDlgItemTextW(hwndMsgBox, IDCANCEL, L"æˆ‘è¦å»¶ç•¢...");
+        // ±N IDOK (­ì¥»ªº½T©w) §ï¬° "¸U·³¡I"
+        if (GetDlgItem(hwndMsgBox, IDOK)) 
+            SetDlgItemText(hwndMsgBox, IDOK, "¸U·³¡I");
+        // ±N IDCANCEL (­ì¥»ªº¨ú®ø) §ï¬° "§Ú­n©µ²¦..."
+        if (GetDlgItem(hwndMsgBox, IDCANCEL)) 
+            SetDlgItemText(hwndMsgBox, IDCANCEL, "§Ú­n©µ²¦...");
         return 0;
     }
-    return CallNextHookEx(NULL, nCode, wParam, lParam);
+    return CallNextHookEx(hMsgBoxHook, nCode, wParam, lParam);
 }
 
-/** é¡¯ç¤ºç•¢æ¥­è¦–çª— */
+// «Ê¸Ë¦¨¤@­Ó¯S®íªº©I¥s¨ç¼Æ
 int ShowGraduationDialog(HWND hwnd) {
-    HHOOK hHook = SetWindowsHookExW(WH_CBT, MsgBoxHookProc, NULL, GetCurrentThreadId());
-    int result = MessageBoxW(hwnd, L"æ­å–œæ“ä½œå®Œæˆï¼Œå¯ä»¥é †åˆ©ç•¢æ¥­äº†ï¼", L"é †åˆ©åŸ·è¡Œå®Œç•¢", MB_OKCANCEL | MB_ICONINFORMATION);
-    UnhookWindowsHookEx(hHook);
+    hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxHookProc, NULL, GetCurrentThreadId());
+    // ³o¸Ì¥²¶·¨Ï¥Î MB_OKCANCEL ¤~·|¥X²{¨â­Ó«ö¶s¨Ñ§Ú­Ì§ï¦W
+    int result = MessageBox(hwnd, 
+                    "®¥³ß¾Ş§@§¹¦¨¡A¥i¥H¶¶§Q²¦·~¤F¡I", 
+                    "¶¶§Q°õ¦æ§¹²¦", 
+                    MB_OKCANCEL | MB_ICONINFORMATION);
+    UnhookWindowsHookEx(hMsgBoxHook);
     return result;
 }
 
-// ===== æ ¸å¿ƒæ‰¹æ¬¡è™•ç†é‚è¼¯ =====
+// ===== ®Ö¤ß§å¦¸³B²zÅŞ¿è =====
 void ExecuteBatchProcess(HWND hwnd) {
-    ULONGLONG total_start = GetTickCount64();
+    ULONGLONG total_start = GetTickCount();
     int total_processed_files = 0;
     int total_directories = 0;
 
+    // ¨ú±o ListBox ¿ï¨úªº¶µ¥Ø¼Æ¶q
     int count = SendMessage(hListBox, LB_GETSELCOUNT, 0, 0);
     if (count <= 0) {
-        MessageBoxW(hwnd, L"è«‹è‡³å°‘é¸æ“‡ä¸€å€‹è³‡æ–™å¤¾ï¼", L"æç¤º", MB_OK | MB_ICONWARNING);
+        MessageBox(hwnd, "½Ğ¦Ü¤Ö¿ï¾Ü¤@­Ó¸ê®Æ§¨¡I", "´£¥Ü", MB_OK | MB_ICONWARNING);
         return;
     }
 
     int *indices = (int *)malloc(sizeof(int) * count);
-    if (!indices) return;
+    if (!indices) {
+        logMessage(LOG_ERROR, "ERROR", "Memory allocation failed for indices");
+        return;
+    }
 
     SendMessage(hListBox, LB_GETSELITEMS, (WPARAM)count, (LPARAM)indices);
     logMessage(LOG_SYSTEM, "SYSTEM", "Batch process started (%d directories)", count);
 
     for (int i = 0; i < count; i++) {
-        ULONGLONG folder_start = GetTickCount64();
+        ULONGLONG folder_start = GetTickCount();
         total_directories++;
 
+        // --- 1. ¸ê·½ªì©l¤Æ¬° NULL / ¹s­È ---
+        // ³o¬O goto ²M²z¼Ò¦¡ªº®Ö¤ß¡G½T«O²M²z®Éª¾¹D­ş¨Ç¸ê·½¤w¤À°t
         DynamicTable origin = {0}; 
         FileInfo file_info = {0, NULL, 0, 0, 0};
         TableSet* myData = NULL;
@@ -138,13 +169,19 @@ void ExecuteBatchProcess(HWND hwnd) {
         SendMessage(hListBox, LB_GETTEXT, indices[i], (LPARAM)folder);
         logMessage(LOG_INFO, "INFO", "[%d/%d] Processing directory: %s", i + 1, count, folder);
 
-        if (loadSourceCSV(G_SelectedSourcePath, &origin) <= 0) {
+        // --- 2. ¸ü¤J­ì©l¹ï·Óªí ---
+        int rows = loadSourceCSV(G_SelectedSourcePath, &origin);
+        if (rows <= 0) {
             logMessage(LOG_WARN, "WARNING", "Failed to read source CSV: %s", G_SelectedSourcePath);
-            goto folder_cleanup;
+            goto folder_cleanup; // ª½±µ¸õ¨ì²M²z°Ï
         }
 
+        // --- 3. ±½´y¥Ø¿ı ---
         dir = opendir(folder);
-        if (!dir) goto folder_cleanup;
+        if (!dir) {
+            logMessage(LOG_WARN, "WARNING", "Directory not found: %s", folder);
+            goto folder_cleanup;
+        }
 
         struct dirent *ent;
         while ((ent = readdir(dir)) != NULL) {
@@ -158,76 +195,140 @@ void ExecuteBatchProcess(HWND hwnd) {
                 }
             }
         }
-        closedir(dir); dir = NULL;
+        closedir(dir);
+        dir = NULL; // ¼Ğ°O¤wÃö³¬
 
-        if (total_o_files <= 0 || file_info.total_count <= 0) goto folder_cleanup;
+        if (total_o_files <= 0 || file_info.total_count <= 0) {
+            logMessage(LOG_WARN, "WARNING", "No valid .o files in: %s", folder);
+            goto folder_cleanup;
+        }
 
+        // --- 4. ±Æ§Ç¨Ã°t¸m°O¾ĞÅé ---
         total_o_files = get_sorted_o_files(folder, &myFiles);
-        myData = createTableSet(total_o_files, file_info.total_count + 1, file_info.label_count + 1);
-        if (!myData) goto folder_cleanup;
+        if (total_o_files <= 0) goto folder_cleanup;
 
+        myData = createTableSet(total_o_files, 
+                               file_info.total_count + 1, 
+                               file_info.label_count + 1);
+        if (!myData) {
+            logMessage(LOG_ERROR, "ERROR", "TableSet allocation failed");
+            goto folder_cleanup;
+        }
+
+        // --- 5. ³B²z¸ê®Æ ---
         for (int j = 0; j < total_o_files; j++) {
             char full_path[512];
             snprintf(full_path, sizeof(full_path), "%s\\%s", folder, myFiles[j]);
-            loadSingleFileData(full_path, &(myData->tables[j]), file_info.particles, file_info.tally_count, file_info.label_count, file_info.labels);
+            logMessage(LOG_INFO, "INFO", "Processing file [%d/%d]: %s", j + 1, total_o_files, myFiles[j]);
+            if (loadSingleFileData(full_path, &(myData->tables[j]), 
+                                   file_info.particles, file_info.tally_count, 
+                                   file_info.label_count, file_info.labels) != 0) {
+                logMessage(LOG_ERROR, "ERROR", "File load failed: %s", myFiles[j]);
+            }
         }
 
+        // --- 6. ¶×¥X ---
         if (exportFinalReport(folder, &origin, myData, myFiles) == 0) {
             logMessage(LOG_SUCCESS, "SUCCESS", "Folder processed: %s", folder);
             total_processed_files += total_o_files;
         }
 
+        // --- 7. ²Î¤@²M²z°Ï°ì (The Cleanup Label) ---
         folder_cleanup:
         if (dir) closedir(dir);
-        if (myFiles) { cleanup_list(myFiles, total_o_files); }
-        if (myData) { freeTableSet(myData); }
+        if (myFiles) { cleanup_list(myFiles, total_o_files); myFiles = NULL; }
+        if (myData) { freeTableSet(myData); myData = NULL; }
         free_file_info(&file_info);
         clearTable(&origin);
-        logMessage(LOG_SYSTEM, "SYSTEM", "Folder time: %.2f s", (GetTickCount64() - folder_start) / 1000.0);
+
+        ULONGLONG folder_end = GetTickCount();
+        logMessage(LOG_SYSTEM, "SYSTEM", "Folder time: %.2f s", (folder_end - folder_start) / 1000.0);
     }
 
-    free(indices);
-    logMessage(LOG_SYSTEM, "SUMMARY", "Total directories : %d", total_directories);
-    
-    int msgboxID = MessageBoxW(hwnd, L"æ‰¹æ¬¡è™•ç†å®Œæˆï¼\næ˜¯å¦è¦æ•´åˆç‚ºåˆ†é  Excelï¼Ÿ", L"å®Œæˆ", MB_YESNO | MB_ICONQUESTION);
-    if (msgboxID == IDYES) {
-        ShellExecuteW(NULL, L"open", L"powershell.exe", L"-ExecutionPolicy Bypass -File merge.ps1", NULL, SW_HIDE);
-        MessageBoxW(hwnd, L"Excel æ•´åˆæŒ‡ä»¤å·²é€å‡ºã€‚", L"å®Œæˆ", MB_OK);
-        
-        int gradResult = ShowGraduationDialog(hwnd);
-        if (gradResult == IDCANCEL) {
-            logMessage(LOG_WARN, "SYSTEM", "ä½¿ç”¨è€…é¸æ“‡å»¶ç•¢ã€‚");
-        } else {
-            logMessage(LOG_SUCCESS, "SYSTEM", "ä½¿ç”¨è€…é †åˆ©ç•¢æ¥­ï¼");
-        }
-    }
+    if (indices) free(indices);
+
+    ULONGLONG total_end = GetTickCount();
+    double total_time = (total_end - total_start) / 1000.0;
+
+    // µ²ºâµe­±
+    printf("\n");
+    logMessage(LOG_SYSTEM, "SUMMARY", "Total directories processed : %d", total_directories);
+    logMessage(LOG_SYSTEM, "SUMMARY", "Total .o files processed     : %d", total_processed_files);
+    logMessage(LOG_SYSTEM, "SUMMARY", "Total execution time         : %.2f seconds", total_time);
+    printf("\n");
+
+    // ¾ã¦X¥\¯à¸ß°İ
+    int msgboxID = MessageBox(
+        hwnd,
+        "§å¦¸ CSV ³B²z§¹¦¨¡I\n¬O§_­n¥ß§Y°õ¦æ PowerShell ¾ã¦X¬°¤À­¶ Excel¡H",
+        "§å¦¸³B²z§¹¦¨",
+        MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON1
+    );
+
+	if (msgboxID == IDYES) {
+	    logMessage(LOG_SYSTEM, "SYSTEM", "Launching PowerShell integration script...");
+	    
+	    // 1. °õ¦æ PowerShell ¸}¥»
+	    ShellExecute(NULL, "open", "powershell.exe",
+	                 "-ExecutionPolicy Bypass -File merge.ps1",
+	                 NULL, SW_HIDE);
+	
+	    // 2. Åã¥Ü²Ä¤@­Óµøµ¡ (´¶³qªº½T©wµøµ¡)
+	    MessageBox(hwnd,
+	               "Excel ¾ã¦X«ü¥O¤w°e¥X¡A½ĞÀË¬d MCNP_Total_Summary.xlsx¡C",
+	               "§¹¦¨",
+	               MB_OK | MB_ICONINFORMATION);
+	
+	    // 3. ·í¤W­±ªºµøµ¡Ãö³¬«á¡Aºò±µµÛÅã¥Ü¡u²¦·~µøµ¡¡v
+	    int gradResult = ShowGraduationDialog(hwnd);
+	
+	    // ®Ú¾Ú¨Ï¥ÎªÌªº¿ï¾Ü¬ö¿ı¤é»x
+	    if (gradResult == IDCANCEL) {
+	        // ¨Ï¥ÎªÌÂI¤F¡u§Ú­n©µ²¦...¡v
+	        logMessage(LOG_WARN, "SYSTEM", "¨Ï¥ÎªÌ¿ï¾Ü©µ²¦¡A¹êÅç«Çªº¿O¤õ±N¬°§A¦Ó¯d¡C");
+	        MessageBox(hwnd, "³o«i®ğ¥O¤H¨ØªA¡A¹êÅç«Ç¥Ã»·Åwªï§A¡C", "¶}µoªÌªºÃöÃh", MB_OK);
+	    } else {
+	        // ¨Ï¥ÎªÌÂI¤F¡u¸U·³¡I¡v
+	        logMessage(LOG_SUCCESS, "SYSTEM", "¨Ï¥ÎªÌ¶¶§Q²¦·~¡A®¥³ß²æÂ÷­W®ü¡I");
+	        MessageBox(hwnd, "ya~( ¢X¡¾¢X)/¦Û¥Ñ¤F\n\nµ{¦¡¤w¥¿±`µ²§ô¡C\nreturn 0;", "wow ¨S¦³°{°hÕÙ", MB_OK);
+	    }
+	}
 }
 
-// --- è¦–çª—å›å‘¼å‡½å¼ (WndProc) ---
+// --- µøµ¡¦^©I¨ç¦¡ ---
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            // é€™è£¡å¼·çƒˆå»ºè­°ä½¿ç”¨ W ç‰ˆæœ¬ API å»ºç«‹ UI
-            HWND hGroup = CreateWindowExW(0, L"BUTTON", L" ç›®éŒ„è¤‡é¸ (Ctrl/Shift) ", WS_VISIBLE | WS_CHILD | BS_GROUPBOX, 10, 10, 265, 180, hwnd, NULL, NULL, NULL);
+            // «Ø¥ß UI §G§½
+            HWND hGroup = CreateWindow("BUTTON", " ¥Ø¿ı½Æ¿ï (Ctrl/Shift) ", 
+                                       WS_VISIBLE | WS_CHILD | BS_GROUPBOX, 
+                                       10, 10, 265, 180, hwnd, NULL, NULL, NULL);
             SetDefaultFont(hGroup);
 
-            hListBox = CreateWindowExW(WS_EX_CLIENTEDGE, L"LISTBOX", NULL, WS_VISIBLE | WS_CHILD | LBS_STANDARD | WS_VSCROLL | LBS_EXTENDEDSEL, 25, 40, 235, 130, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
+            hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", NULL, 
+                                    WS_VISIBLE | WS_CHILD | LBS_STANDARD | WS_VSCROLL | LBS_EXTENDEDSEL, 
+                                    25, 40, 235, 130, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
             SetDefaultFont(hListBox);
 
-            HWND hBtnHelp = CreateWindowExW(0, L"BUTTON", L"èªªæ˜ (Help)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 15, 205, 80, 35, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            HWND hBtnHelp = CreateWindow("BUTTON", "»¡©ú (Help)", 
+                                         WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 
+                                         15, 205, 80, 35, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SetDefaultFont(hBtnHelp);
 
-            hBtnOk = CreateWindowExW(0, L"BUTTON", L"æ‰¹æ¬¡è™•ç†", WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 155, 205, 120, 35, hwnd, (HMENU)ID_BTN_OK, NULL, NULL);
+            hBtnOk = CreateWindow("BUTTON", "§å¦¸³B²z", 
+                                       WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                                       155, 205, 120, 35, hwnd, (HMENU)ID_BTN_OK, NULL, NULL);
             SetDefaultFont(hBtnOk);
 
-            WIN32_FIND_DATAW findData;
-            HANDLE hFind = FindFirstFileW(L".\\*", &findData);
+            // ¦Û°Ê±½´y·í«e¥Ø¿ı¤Uªº¸ê®Æ§¨¨Ã¥[¤J ListBox
+            WIN32_FIND_DATA findData;
+            HANDLE hFind = FindFirstFile(".\\*", &findData);
             if (hFind != INVALID_HANDLE_VALUE) {
                 do {
                     if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && findData.cFileName[0] != '.') {
-                        SendMessageW(hListBox, LB_ADDSTRING, 0, (LPARAM)findData.cFileName);
+                        SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)findData.cFileName);
                     }
-                } while (FindNextFileW(hFind, &findData));
+                } while (FindNextFile(hFind, &findData));
                 FindClose(hFind);
             }
             break;
@@ -235,67 +336,130 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND:
             if (LOWORD(wParam) == ID_BTN_OK) ExecuteBatchProcess(hwnd);
             if (LOWORD(wParam) == ID_BTN_HELP) {
-                MessageBoxW(hwnd, L"ä½¿ç”¨èªªæ˜ï¼š\n1. é¸å– Source CSV\n2. é¸å–è³‡æ–™å¤¾\n3. é»æ“Šæ‰¹æ¬¡è™•ç†", L"èªªæ˜", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, 
+                    "¨Ï¥Î»¡©ú¡G\n"
+                    "1. ¥Ø¿ıµ²ºc\n"
+                    "/file/\n"
+					" ¢u¢w¢wxxx.exe\n"
+					" ¢u¢w¢wmerge.ps1\n"
+					" ¢u¢w¢w(source).csv\n"
+					" ¢u¢w¢w(files)\n"
+					" ¢x        ¢|¢w¢wxxx.o\n"
+                    "2. ¿ï¨ú Source CSV¡C\n"
+                    "3. ¦b²M³æ¤¤¦h¿ï¸ê®Æ§¨ (Ctrl/Shift)¡C\n"
+                    "4. ÂIÀ»¡u§å¦¸³B²z¡v²£¥X¼Æ¾Ú¡C\n"
+					"5. ³Ì«á¥i¿ï¾Ü¾ã¦X¬°³æ¤@ Excel ÀÉ¡C", 
+                    "»¡©ú¸ê°T", MB_OK | MB_ICONINFORMATION);
             }
             break;
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
         default:
-            return DefWindowProcW(hwnd, msg, wParam, lParam);
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
 
-// --- ä¸»ç¨‹å¼é€²å…¥é» ---
+// --- ¥Dµ{¦¡¶i¤JÂI ---
 int main() {
     AllocConsole();
-    // è¨­å®šè¼¸å‡ºç·¨ç¢¼ç‚º UTF-8 ä»¥æ”¯æ´ç¥ç¸ ASCII Art
-    SetConsoleOutputCP(65001);
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     freopen("CONOUT$", "w", stdout);
-
-    SetConsoleTitleW(L"å·å·åˆç³–ç³– - ç¥ç¸å®ˆè­·ç‰ˆ");
-
+    
+    SetConsoleTitle("¨÷¨÷¤S¿}¿}");
+	
+    // ¯«Ã~¦uÅ@µe­±
     setColor(LOG_SUCCESS);
-    printf("                /\\_/\\      ___      /\\_/\\\n");
-    printf("               ( o.o )   /   \\    ( o.o )\n");
-    printf("                > ^ <   / /^\\ \\    > ^ <\n");
-    printf("             ___/     \\_/ /_\\ \\_/     \\___\n");
-    printf("                    ç¥ç¸å®ˆè­·ï¼Œç¨‹å¼ä¸é–ƒé€€!\n");
+	printf("                /\\_/\\      ___      /\\_/\\\n");
+	printf("               ( o.o )   /   \\    ( o.o )\n");
+	printf("                > ^ <   / /^\\ \\    > ^ <\n");
+	printf("             ___/     \\_/ /_\\ \\_/     \\___\n");
+	printf("            /  /|       (  * )       |\\  \\\n");
+	printf("           /  / |        \\___/        | \\  \\\n");
+	printf("          (  (  |      Protect Code!  |  )  )\n");
+	printf("           \\  \\ |     Keep Bug Free    | /  /\n");
+	printf("            \\__\\|_____________________|/__/\n");
+	printf("                    ¯«Ã~¦uÅ@¡Aµ{¦¡¤£°{°h!\n");
+	
+    // ¼ĞÃD¸Ë¹¢
+    setColor(LOG_INFO);
+    printf(" __________________________________________________________ \n");
+    printf("|                                                          |\n");
+    printf("|         M C N P   D A T A   T O O L K I T   v2.7.2       |\n");
+    printf("|__________________________________________________________|\n\n");
     setColor(LOG_NORMAL);
+	
+	// ÀË¬d§ó·s 
+	CheckForUpdates();
 
-    // æª¢æŸ¥é è¨­æª”æ¡ˆ
-    if (_waccess(L"source.csv", 0) == 0) {
+    // ÀË¬d¹w³]ÀÉ®×
+    FILE *f = fopen("source.csv", "r");
+    if (f) {
         logMessage(LOG_INFO, "INFO", "Default 'source.csv' detected.");
-        strcpy(G_SelectedSourcePath, "source.csv");
+        strncpy(G_SelectedSourcePath, "source.csv", sizeof(G_SelectedSourcePath)-1);
+		G_SelectedSourcePath[sizeof(G_SelectedSourcePath)-1] = '\0';
+        fclose(f);
     } else {
-        logMessage(LOG_WARN, "WARN", "Requesting user input...");
-        if (!SelectSourceFile(NULL, G_SelectedSourcePath)) return 0;
-    }
-
-    HINSTANCE hInst = GetModuleHandle(NULL);
-    WNDCLASSW wc = {0};
-    wc.lpfnWndProc = WndProc;
-    wc.hInstance = hInst;
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpszClassName = L"MCNPDevToolkitClass"; // å¯¬å­—å…ƒé¡åˆ¥åç¨±
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    RegisterClassW(&wc);
-
-    HWND hwnd = CreateWindowExW(0, L"MCNPDevToolkitClass", L"MCNP æ•¸æ“šæ•´åˆå·¥å…·", 
-                               WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE, 
-                               CW_USEDEFAULT, CW_USEDEFAULT, 300, 320, NULL, NULL, hInst, NULL);
-
-    MSG msg;
-    while (GetMessageW(&msg, NULL, 0, 0)) {
-        if (!IsDialogMessageW(hwnd, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
+        logMessage(LOG_WARN, "WARN", "'source.csv' missing. Requesting user input...");
+        MessageBox(NULL, "°»´ú¤£¨ì source.csv ÀÉ®×¡I\n½ĞÂIÀ»½T©w«á¤â°Ê¿ï¨ú¨Ó·½ CSV¡C", "§ä¤£¨ìÀÉ®×", MB_OK | MB_ICONINFORMATION);
+        
+        if (!SelectSourceFile(NULL, G_SelectedSourcePath)) {
+            logMessage(LOG_ERROR, "FATAL", "User cancelled selection. Exiting.");
+            MessageBox(NULL, "¥¼¿ï¨ú¨Ó·½ÀÉ®×¡Aµ{¦¡±Nµ²§ô¡C", "Error", MB_OK | MB_ICONERROR);
+            return 0;
         }
     }
 
-    printf("\n ç¨‹å¼çµæŸï¼Œ3 ç§’å¾Œé—œé–‰...\n");
-    Sleep(3000);
+    logMessage(LOG_SUCCESS, "READY", "Current source: %s", G_SelectedSourcePath);
+    printf(" Waiting for user interaction...\n\n");
+
+    // µù¥Uµøµ¡Ãş§O»P«Ø¥ßµøµ¡
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    WNDCLASS wc = {0};
+    wc.lpfnWndProc = WndProc;
+    wc.hInstance = hInstance;
+    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.lpszClassName = "MCNPDevToolkit";
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    RegisterClass(&wc);
+
+    HWND hwnd = CreateWindow("MCNPDevToolkit", "MCNP ¼Æ¾Ú¾ã¦X¤u¨ã", 
+                             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE, 
+                             (GetSystemMetrics(SM_CXSCREEN)-300)/2, (GetSystemMetrics(SM_CYSCREEN)-300)/2, 
+                             300, 300, NULL, NULL, hInstance, NULL);
+
+    // °T®§°j°é
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    // --- µ²§ô«eªº­Ë¼ÆÅŞ¿è (¬ü¤Æª©) ---
+    printf("\n");
+    setColor(LOG_SYSTEM);
+    printf("============================================================\n");
+    setColor(LOG_NORMAL);
+    printf(" ·PÁÂ±zªº¨Ï¥Î¡C\n");
+    
+    for(int i = 3; i > 0; i--) {
+        printf(" µ{¦¡±N¦b ");
+        setColor(LOG_WARN);
+        printf("%d", i);
+        setColor(LOG_NORMAL);
+        printf(" ¬í«á¦Û°ÊÃö³¬...\r");
+        fflush(stdout);
+        Sleep(1000);
+    }
+    
+    setColor(LOG_SYSTEM);
+    printf("\n============================================================\n");
+    setColor(LOG_NORMAL);
+
+    FreeConsole();
     return 0;
 }
+
