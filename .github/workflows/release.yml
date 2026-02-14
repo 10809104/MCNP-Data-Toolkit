@@ -33,8 +33,8 @@ jobs:
 
       - name: Compile Program
         run: |
-          gcc main.c resource.res -o "MCNP_Tool.exe" -std=c99 -static -mwindows -lwininet -lshlwapi -lurlmon -lcomdlg32 -lgdi32 -luser32
-          gcc main.c resource.res -o "MRCP_Tool.exe" -std=c99 -static -mwindows -lwininet -lshlwapi -lurlmon -lcomdlg32 -lgdi32 -luser32
+          gcc main.c resource.res -o "MCNP_Tool.exe" -std=c99 -static -fexec-charset=UTF-8 -mwindows -lwininet -lshlwapi -lurlmon -lcomdlg32 -lgdi32 -luser32
+          gcc main.c resource.res -o "MRCP_Tool.exe" -std=c99 -static -fexec-charset=UTF-8 -mwindows -lwininet -lshlwapi -lurlmon -lcomdlg32 -lgdi32 -luser32
 
       - name: Upload to Latest Release
         uses: softprops/action-gh-release@v2
