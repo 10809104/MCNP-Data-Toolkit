@@ -275,7 +275,7 @@ void ExecuteBatchProcess(HWND hwnd) {
 	
 	    // 2. 顯示第一個視窗 (普通的確定視窗)
 	    MessageBox(hwnd,
-	               "Excel 整合指令已送出，請檢查 MRCP_Total_Summary.xlsx。",
+	               "Excel 整合指令已送出，請檢查 MCNP_Total_Summary.xlsx。",
 	               "完成",
 	               MB_OK | MB_ICONINFORMATION);
 	
@@ -340,11 +340,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "使用說明：\n"
                     "1. 目錄結構\n"
                     "/file/\n"
-					" ├──OO.exe\n"
+					" ├──xxx.exe\n"
 					" ├──merge.ps1\n"
-					" ├──(source.csv)\n"
+					" ├──(source).csv\n"
 					" ├──(files)\n"
-					" │        └──OO.o\n"
+					" │        └──xxx.o\n"
                     "2. 選取 Source CSV。\n"
                     "3. 在清單中多選資料夾 (Ctrl/Shift)。\n"
                     "4. 點擊「批次處理」產出數據。\n"
@@ -386,7 +386,7 @@ int main() {
     setColor(LOG_INFO);
     printf(" __________________________________________________________ \n");
     printf("|                                                          |\n");
-    printf("|         M R C P   D A T A   T O O L K I T   v2.7.1       |\n");
+    printf("|         M C N P   D A T A   T O O L K I T   v2.7.2       |\n");
     printf("|__________________________________________________________|\n\n");
     setColor(LOG_NORMAL);
 	
@@ -420,11 +420,11 @@ int main() {
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpszClassName = "MRCPApp";
+    wc.lpszClassName = "MCNPDevToolkit";
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindow("MRCPApp", "MRCP 數據整合工具", 
+    HWND hwnd = CreateWindow("MCNPApp", "MCNP 數據整合工具", 
                              WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE, 
                              (GetSystemMetrics(SM_CXSCREEN)-300)/2, (GetSystemMetrics(SM_CYSCREEN)-300)/2, 
                              300, 300, NULL, NULL, hInstance, NULL);

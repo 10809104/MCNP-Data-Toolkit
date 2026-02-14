@@ -14,8 +14,9 @@
 #define MB_ICONSHIELD 0x0000004CL
 #endif
 // 版本目標
-#define CURRENT_VERSION "v2.7.1"
+#define CURRENT_VERSION "v2.7.2"
 #define VERSION_URL "https://raw.githubusercontent.com/10809104/MCNP-Data-Toolkit/main/version.txt"
+#define EXE_URL "https://github.com/10809104/MCNP-Data-Toolkit/releases/latest/download/MCNP_Tool.exe"
 
 /* ================= 資料結構 ================= */
 // 定義資料型別枚舉，用來標記 Cell 目前儲存的是哪種資料
@@ -209,8 +210,8 @@ void PerformUpdate(const char* downloadUrl)
 
     // --- 2. 下載流程 ---
     GetTempPath(MAX_PATH, tempPath); 
-    sprintf(newExePath, "%sMRCP_Update_Temp.exe", tempPath); 
-    sprintf(batPath, "%supdate_mrcp.bat", tempPath); 
+    sprintf(newExePath, "%sMCNP_Update_Temp.exe", tempPath); 
+    sprintf(batPath, "%supdate_mcnp.bat", tempPath); 
 
     printf("[UPDATE] Downloading new version...\n"); 
     HRESULT hr = URLDownloadToFile(NULL, downloadUrl, newExePath, 0, NULL); 
@@ -230,7 +231,7 @@ void PerformUpdate(const char* downloadUrl)
     // 腳本邏輯：無限循環直到舊版被刪除 -> 移動新版覆蓋舊版 -> 啟動新版 -> 刪除腳本自己
     fprintf(f, 
         "@echo off\n" 
-        "title MRCP Updater\n"
+        "title MCNP Updater\n"
         "echo 正在等待程式關閉並套用更新...\n" 
         ":loop\n" 
         "del \"%s\" >nul 2>&1\n" 
@@ -266,7 +267,7 @@ void CheckForUpdates()
 {
     printf("[SYSTEM] Checking for updates...\n");
 
-    HINTERNET hInternet = InternetOpen("MRCP_Tool",
+    HINTERNET hInternet = InternetOpen("MCNP_Tool",
                                        INTERNET_OPEN_TYPE_DIRECT,
                                        NULL, NULL, 0);
 
@@ -354,8 +355,7 @@ void CheckForUpdates()
 
         if (result == IDYES)
         {
-            const char* exeUrl =
-                "https://github.com/10809104/MCNP-Data-Toolkit/releases/latest/download/MRCP_Tool.exe";
+            const char* exeUrl = EXE_URL;
 
             PerformUpdate(exeUrl);
         }
