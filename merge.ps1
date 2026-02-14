@@ -61,12 +61,12 @@ try {
     }
 
     # 9. 儲存最終成果
-    $outputPath = Join-Path $pwd.Path "MRCP_Total_Summary.xlsx"
+    $outputPath = Join-Path $pwd.Path "MCNP_Total_Summary.xlsx"
     $mainWorkbook.SaveAs($outputPath, 51)
     $mainWorkbook.Close()
     $excel.Quit()
 
-    Write-Host "整合與美化完成！產出檔案：MRCP_Total_Summary.xlsx" -ForegroundColor Green
+    Write-Host "整合與美化完成！產出檔案：MCNP_Total_Summary.xlsx" -ForegroundColor Green
 }
 catch {
     Write-Host "發生錯誤: $($_.Exception.Message)" -ForegroundColor Red
