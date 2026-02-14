@@ -67,6 +67,9 @@ int loadSourceCSV(const char *filename, DynamicTable *dt) {
             // 確認 strdup 是否成
             if (dt->table[r][col].data.s == NULL && strlen(temp) > 0) {
                 fprintf(stderr, "記憶體分配失敗 (strdup)\n");
+                fclose(fp);
+                clearTable(dt);
+                return -1;
             }
         }
         r++;
@@ -74,6 +77,19 @@ int loadSourceCSV(const char *filename, DynamicTable *dt) {
 
     fclose(fp);
     return totalRows;
+}
+
+/**
+ * @brief 釋放 FileInfo 結構內部的動態記憶體
+ */
+void free_file_info(FileInfo *info) {
+    if (info && info->labels) {
+        for (int k = 0; k < info->label_count; k++) {
+            if (info->labels[k]) free(info->labels[k]);
+        }
+        free(info->labels);
+        info->labels = NULL; // 避免 Double Free
+    }
 }
 
 /**
@@ -142,18 +158,29 @@ FileInfo get_file_info(const char *path) {
                         fclose(fp);
                         return report;
                     }
+                    for (int k = 0; k < report.label_count; k++) report.labels[k] = NULL;
                     
                     // 3. 只填入「第一組」的標籤名稱作為代表
                     strcpy(temp, line);
                     token = strtok(temp, " \t\n");
                     int idx = 0;
-                    while (token && idx < report.label_count) {
-                        if (strcmp(token, "nps") != 0) {
-                            report.labels[idx] = strdup(token);
-                            if (report.labels[idx] != NULL)  idx++;
-                        }
-                        token = strtok(NULL, " \t\n");
-                    }
+					while (token && idx < report.label_count) {
+					    if (strcmp(token, "nps") != 0) {
+					
+					        report.labels[idx] = strdup(token);
+					
+					        if (!report.labels[idx]) {
+					            free_file_info(&report);
+					            fclose(fp);
+					            return report;
+					        }
+					
+					        idx++;
+					    }
+					
+					    token = strtok(NULL, " \t\n");
+					}
+                    
                 }
             }
             
@@ -230,6 +257,17 @@ int compareNames(const void *a, const void *b) {
 }
 
 /**
+ * @brief 釋放字串清單佔用的記憶體
+ */
+void cleanup_list(char **list, int count) {
+    if (!list) return;
+    for (int i = 0; i < count; i++) {
+        free(list[i]);
+    }
+    free(list);
+}
+
+/**
  * @brief 取得指定資料夾內所有 .o 檔案並排序
  * @param path      資料夾路徑
  * @param list_ptr  回傳檔案清單指標的地址
@@ -263,14 +301,19 @@ int get_sorted_o_files(const char *path, char ***list_ptr) {
                 // --- 記憶體檢查 : realloc 擴展容量 ---
                 char **tempList = realloc(fileList, capacity * sizeof(char *));
                 if (!tempList) {
-                    perror("擴展檔案列表失敗");
-                    // realloc 失敗時原 fileList 仍有效，這裡先保留已讀取的
-                    break;
+                    closedir(dir);
+                    cleanup_list(fileList, count);
+                    return -1;
                 }
                 fileList = tempList;
             }
-            fileList[count] = strdup(ent->d_name);
-            count++;
+            char *tmp = strdup(ent->d_name);
+            if (!tmp) {
+			    closedir(dir);
+			    cleanup_list(fileList, count);
+			    return -1;
+			}
+			fileList[count++] = tmp;
         }
     }
     closedir(dir);
@@ -282,17 +325,6 @@ int get_sorted_o_files(const char *path, char ***list_ptr) {
 
     *list_ptr = fileList; 
     return count;
-}
-
-/**
- * @brief 釋放字串清單佔用的記憶體
- */
-void cleanup_list(char **list, int count) {
-    if (!list) return;
-    for (int i = 0; i < count; i++) {
-        free(list[i]);
-    }
-    free(list);
 }
 
 /**
@@ -317,9 +349,24 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
     // --- 設定表格標頭 (Row 0) ---
     dt->table[0][0].type = TYPE_STRING;
     dt->table[0][0].data.s = strdup("no."); 
+    if (!dt->table[0][0].data.s) {
+        fclose(fp);
+        return -1;          // 表頭失敗，直接返回（無需清理其他，因為尚未配置）
+    }
     for (int i = 0; i < set; i++) {
         dt->table[0][i+1].type = TYPE_STRING;
         dt->table[0][i+1].data.s = strdup(labels[i]);
+        if (!dt->table[0][i+1].data.s) {
+            // 釋放之前已成功配置的表頭字串
+            for (int j = 0; j < i; j++) {
+                free(dt->table[0][j+1].data.s);
+                dt->table[0][j+1].data.s = NULL;
+            }
+            free(dt->table[0][0].data.s);
+            dt->table[0][0].data.s = NULL;
+            fclose(fp);
+            return -1;
+        }
     }
 
     while (fgets(line, sizeof(line), fp)) {
@@ -406,14 +453,11 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
  * @param myData  包含所有檔案數據的 TableSet
  * @param myFiles 檔名清單 (用於提取標頭)
  */
-void exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData, char** myFiles) {
+int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData, char** myFiles) {
     char out_path[512];
     snprintf(out_path, sizeof(out_path), "%s/Final_Report.csv", folder);
     FILE *fp = fopen(out_path, "w");
-    if (!fp) {
-        printf("錯誤：無法建立輸出檔案 %s\n", out_path);
-        return;
-    }
+    if (!fp) return -1;
 
     fputs("\xEF\xBB\xBF", fp); 
 
@@ -503,5 +547,6 @@ void exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myDat
     }
 
     fclose(fp);
-    printf(" >> 報告產出完成，最大資料長度: %d 行\n", max_rows);
+    printf(" >> The report has been generated successfully. The number of data rows is %d.\n", max_rows);
+    return 0;
 }

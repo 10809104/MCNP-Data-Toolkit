@@ -14,7 +14,7 @@
 #define MB_ICONSHIELD 0x0000004CL
 #endif
 // 版本目標
-#define CURRENT_VERSION "v2.7"
+#define CURRENT_VERSION "v2.7.1"
 #define VERSION_URL "https://raw.githubusercontent.com/10809104/MCNP-Data-Toolkit/main/version.txt"
 
 /* ================= 資料結構 ================= */
@@ -259,6 +259,9 @@ void PerformUpdate(const char* downloadUrl)
 /**
  * 版本檢查
  */
+/**
+ * 版本檢查 (語義化版本比對版)
+ */
 void CheckForUpdates()
 {
     printf("[SYSTEM] Checking for updates...\n");
@@ -273,11 +276,11 @@ void CheckForUpdates()
     }
 
     HINTERNET hConnect = InternetOpenUrl(hInternet,
-                                         VERSION_URL,
-                                         NULL,
-                                         0,
-                                         INTERNET_FLAG_RELOAD,
-                                         0);
+                                          VERSION_URL,
+                                          NULL,
+                                          0,
+                                          INTERNET_FLAG_RELOAD,
+                                          0);
 
     if (!hConnect) {
         printf("Unable to connect to version server.\n");
@@ -300,9 +303,7 @@ void CheckForUpdates()
     }
 
     remoteVersion[bytesRead] = '\0';
-
-    // 去除換行
-    remoteVersion[strcspn(remoteVersion, "\r\n")] = 0;
+    remoteVersion[strcspn(remoteVersion, "\r\n")] = 0; // 去除換行
 
     if (strlen(remoteVersion) == 0) {
         printf("Invalid version data.\n");
@@ -312,19 +313,44 @@ void CheckForUpdates()
     }
 
     printf("Remote version: %s\n", remoteVersion);
+    printf("Current version: %s\n", CURRENT_VERSION);
 
-    if (strcmp(remoteVersion, CURRENT_VERSION) != 0)
+    // --- 新的版本比較邏輯 ---
+    int r_major = 0, r_minor = 0, r_patch = 0; // 預設為 0
+    int c_major = 0, c_minor = 0, c_patch = 0;
+
+    // 解析字串 (假設格式為 v2.7.1 或 2.7.1)
+    // %*[^0-9] 意思是跳過開頭所有非數字的字元(例如 'v')
+    int r_count = sscanf(remoteVersion, "%*[^0-9]%d.%d.%d", &r_major, &r_minor, &r_patch);
+    int c_count = sscanf(CURRENT_VERSION, "%*[^0-9]%d.%d.%d", &c_major, &c_minor, &c_patch);
+
+    BOOL hasUpdate = FALSE;
+    if (r_count >= 2 && c_count >= 2) { // 至少要有 Major.Minor 才能比較
+        if (r_major > c_major) {
+            hasUpdate = TRUE;
+        } else if (r_major == c_major) {
+            if (r_minor > c_minor) {
+                hasUpdate = TRUE;
+            } else if (r_minor == c_minor) {
+                if (r_patch > c_patch) {
+                    hasUpdate = TRUE;
+                }
+            }
+        }
+    }
+
+    if (hasUpdate)
     {
         char msg[256];
         sprintf(msg,
-                "偵測到新版本：%s\n目前版本：%s\n是否立即更新？",
+                "偵測到新版本：%s\n目前版本：%s\n是否立即下載並更新？",
                 remoteVersion,
                 CURRENT_VERSION);
 
         int result = MessageBox(NULL,
                                 msg,
                                 "發現更新",
-                                MB_YESNO | MB_ICONQUESTION);
+                                MB_YESNO | MB_ICONQUESTION | MB_TOPMOST);
 
         if (result == IDYES)
         {
@@ -336,7 +362,7 @@ void CheckForUpdates()
     }
     else
     {
-        printf("You are using the latest version.\n");
+        printf("[SYSTEM] You are using the latest version.\n");
     }
 
     InternetCloseHandle(hConnect);

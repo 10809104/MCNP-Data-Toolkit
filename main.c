@@ -101,9 +101,38 @@ int SelectSourceFile(HWND hwnd, char* outPath) {
     return 0;
 }
 
+// --- 自定義按鈕文字的 Hook 邏輯 ---
+HHOOK hMsgBoxHook;
+
+LRESULT CALLBACK MsgBoxHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode == HCBT_ACTIVATE) {
+        HWND hwndMsgBox = (HWND)wParam;
+        // 將 IDOK (原本的確定) 改為 "萬歲！"
+        if (GetDlgItem(hwndMsgBox, IDOK)) 
+            SetDlgItemText(hwndMsgBox, IDOK, "萬歲！");
+        // 將 IDCANCEL (原本的取消) 改為 "我要延畢..."
+        if (GetDlgItem(hwndMsgBox, IDCANCEL)) 
+            SetDlgItemText(hwndMsgBox, IDCANCEL, "我要延畢...");
+        return 0;
+    }
+    return CallNextHookEx(hMsgBoxHook, nCode, wParam, lParam);
+}
+
+// 封裝成一個特殊的呼叫函數
+int ShowGraduationDialog(HWND hwnd) {
+    hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxHookProc, NULL, GetCurrentThreadId());
+    // 這裡必須使用 MB_OKCANCEL 才會出現兩個按鈕供我們改名
+    int result = MessageBox(hwnd, 
+                    "恭喜操作完成，可以順利畢業了！", 
+                    "順利執行完畢", 
+                    MB_OKCANCEL | MB_ICONINFORMATION);
+    UnhookWindowsHookEx(hMsgBoxHook);
+    return result;
+}
+
 // ===== 核心批次處理邏輯 =====
 void ExecuteBatchProcess(HWND hwnd) {
-    ULONGLONG total_start = GetTickCount(); // 計時開始
+    ULONGLONG total_start = GetTickCount();
     int total_processed_files = 0;
     int total_directories = 0;
 
@@ -114,7 +143,6 @@ void ExecuteBatchProcess(HWND hwnd) {
         return;
     }
 
-    // 配置記憶體存儲索引值
     int *indices = (int *)malloc(sizeof(int) * count);
     if (!indices) {
         logMessage(LOG_ERROR, "ERROR", "Memory allocation failed for indices");
@@ -128,99 +156,95 @@ void ExecuteBatchProcess(HWND hwnd) {
         ULONGLONG folder_start = GetTickCount();
         total_directories++;
 
+        // --- 1. 資源初始化為 NULL / 零值 ---
+        // 這是 goto 清理模式的核心：確保清理時知道哪些資源已分配
+        DynamicTable origin = {0}; 
+        FileInfo file_info = {0, NULL, 0, 0, 0};
+        TableSet* myData = NULL;
+        char **myFiles = NULL;
+        int total_o_files = 0;
+        DIR *dir = NULL;
+
         char folder[MAX_PATH];
         SendMessage(hListBox, LB_GETTEXT, indices[i], (LPARAM)folder);
         logMessage(LOG_INFO, "INFO", "[%d/%d] Processing directory: %s", i + 1, count, folder);
 
-        DynamicTable origin;
-        FileInfo file_info = {0, NULL, 0, 0, 0};
-        TableSet* myData = NULL;
-        char **myFiles = NULL;
-
-        // 載入原始對照表
+        // --- 2. 載入原始對照表 ---
         int rows = loadSourceCSV(G_SelectedSourcePath, &origin);
         if (rows <= 0) {
-            logMessage(LOG_WARN, "WARNING", "Failed to read source CSV: %s. Skipping folder.", G_SelectedSourcePath);
-            continue;
+            logMessage(LOG_WARN, "WARNING", "Failed to read source CSV: %s", G_SelectedSourcePath);
+            goto folder_cleanup; // 直接跳到清理區
         }
 
-        // 掃描目錄下的 .o 檔案
-        DIR *dir = opendir(folder);
+        // --- 3. 掃描目錄 ---
+        dir = opendir(folder);
         if (!dir) {
-            logMessage(LOG_WARN, "WARNING", "Directory not found: %s. Skipping.", folder);
-            clearTable(&origin);
-            continue;
+            logMessage(LOG_WARN, "WARNING", "Directory not found: %s", folder);
+            goto folder_cleanup;
         }
 
-        int total_o_files = 0;
         struct dirent *ent;
         while ((ent = readdir(dir)) != NULL) {
             char *ext = strrchr(ent->d_name, '.');
-            if (ext && strcmp(ext, ".o") == 0) {
+            if (ext && _stricmp(ext, ".o") == 0) {
                 total_o_files++;
-                if (total_o_files == 1) { // 讀取第一個檔案作為結構基準
+                if (total_o_files == 1) {
                     char full_path[512];
-                    snprintf(full_path, sizeof(full_path), "%s/%s", folder, ent->d_name);
+                    snprintf(full_path, sizeof(full_path), "%s\\%s", folder, ent->d_name);
                     file_info = get_file_info(full_path);
                 }
             }
         }
         closedir(dir);
-        total_processed_files += total_o_files;
+        dir = NULL; // 標記已關閉
 
-        if (total_o_files == 0 || file_info.particles == 0 || file_info.total_count == 0) {
-            logMessage(LOG_WARN, "WARNING", "No valid .o files or tally data. Skipping folder.");
-            clearTable(&origin);
-            continue;
+        if (total_o_files <= 0 || file_info.total_count <= 0) {
+            logMessage(LOG_WARN, "WARNING", "No valid .o files in: %s", folder);
+            goto folder_cleanup;
         }
 
-        // 排序並載入資料
+        // --- 4. 排序並配置記憶體 ---
         total_o_files = get_sorted_o_files(folder, &myFiles);
-        myData = createTableSet(total_o_files,
-                                file_info.total_count + 1,
-                                file_info.label_count + 1);
+        if (total_o_files <= 0) goto folder_cleanup;
 
+        myData = createTableSet(total_o_files, 
+                               file_info.total_count + 1, 
+                               file_info.label_count + 1);
         if (!myData) {
-            logMessage(LOG_ERROR, "ERROR", "Failed to allocate TableSet for folder: %s", folder);
-            clearTable(&origin);
-            if (myFiles) cleanup_list(myFiles, total_o_files);
-            continue;
+            logMessage(LOG_ERROR, "ERROR", "TableSet allocation failed");
+            goto folder_cleanup;
         }
 
-        // 遍歷處理單一檔案
+        // --- 5. 處理資料 ---
         for (int j = 0; j < total_o_files; j++) {
             char full_path[512];
-            snprintf(full_path, sizeof(full_path), "%s/%s", folder, myFiles[j]);
-            logMessage(LOG_INFO, "INFO", "Processing file [%d/%d]: %s", j + 1, total_o_files, myFiles[j]);
-
-            loadSingleFileData(full_path,
-                               &(myData->tables[j]),
-                               file_info.particles,
-                               file_info.tally_count,
-                               file_info.label_count,
-                               file_info.labels);
+            snprintf(full_path, sizeof(full_path), "%s\\%s", folder, myFiles[j]);
+            if (loadSingleFileData(full_path, &(myData->tables[j]), 
+                                   file_info.particles, file_info.tally_count, 
+                                   file_info.label_count, file_info.labels) != 0) {
+                logMessage(LOG_ERROR, "ERROR", "File load failed: %s", myFiles[j]);
+            }
         }
 
-        // 導出報表
-        exportFinalReport(folder, &origin, myData, myFiles);
-        logMessage(LOG_SUCCESS, "SUCCESS", "Folder processed successfully: %s", folder);
+        // --- 6. 匯出 ---
+        if (exportFinalReport(folder, &origin, myData, myFiles) == 0) {
+            logMessage(LOG_SUCCESS, "SUCCESS", "Folder processed: %s", folder);
+            total_processed_files += total_o_files;
+        }
 
-        // 清理記憶體
+        // --- 7. 統一清理區域 (The Cleanup Label) ---
+        folder_cleanup:
+        if (dir) closedir(dir);
+        if (myFiles) { cleanup_list(myFiles, total_o_files); myFiles = NULL; }
+        if (myData) { freeTableSet(myData); myData = NULL; }
+        free_file_info(&file_info);
         clearTable(&origin);
-        if (myFiles) cleanup_list(myFiles, total_o_files);
-        if (myData) freeTableSet(myData);
-        if (file_info.labels) {
-            for (int k = 0; k < file_info.label_count; k++)
-                if (file_info.labels[k]) free(file_info.labels[k]);
-            free(file_info.labels);
-        }
 
         ULONGLONG folder_end = GetTickCount();
-        double folder_time = (folder_end - folder_start) / 1000.0;
-        logMessage(LOG_SYSTEM, "SYSTEM", "Folder elapsed time: %.2f seconds", folder_time);
+        logMessage(LOG_SYSTEM, "SYSTEM", "Folder time: %.2f s", (folder_end - folder_start) / 1000.0);
     }
 
-    free(indices);
+    if (indices) free(indices);
 
     ULONGLONG total_end = GetTickCount();
     double total_time = (total_end - total_start) / 1000.0;
@@ -240,17 +264,33 @@ void ExecuteBatchProcess(HWND hwnd) {
         MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON1
     );
 
-    if (msgboxID == IDYES) {
-        logMessage(LOG_SYSTEM, "SYSTEM", "Launching PowerShell integration script...");
-        ShellExecute(NULL, "open", "powershell.exe",
-                     "-ExecutionPolicy Bypass -File merge.ps1",
-                     NULL, SW_HIDE);
-
-        MessageBox(hwnd,
-                   "Excel 整合指令已送出，請檢查 Total_Summary_Styled.xlsx。",
-                   "完成",
-                   MB_OK | MB_ICONINFORMATION);
-    }
+	if (msgboxID == IDYES) {
+	    logMessage(LOG_SYSTEM, "SYSTEM", "Launching PowerShell integration script...");
+	    
+	    // 1. 執行 PowerShell 腳本
+	    ShellExecute(NULL, "open", "powershell.exe",
+	                 "-ExecutionPolicy Bypass -File merge.ps1",
+	                 NULL, SW_HIDE);
+	
+	    // 2. 顯示第一個視窗 (普通的確定視窗)
+	    MessageBox(hwnd,
+	               "Excel 整合指令已送出，請檢查 MRCP_Total_Summary.xlsx。",
+	               "完成",
+	               MB_OK | MB_ICONINFORMATION);
+	
+	    // 3. 當上面的視窗關閉後，緊接著顯示「畢業視窗」
+	    int gradResult = ShowGraduationDialog(hwnd);
+	
+	    // 根據使用者的選擇紀錄日誌
+	    if (gradResult == IDCANCEL) {
+	        // 使用者點了「我要延畢...」
+	        logMessage(LOG_WARN, "SYSTEM", "使用者選擇延畢，實驗室的燈火將為你而留。");
+	        MessageBox(hwnd, "這勇氣令人佩服，實驗室永遠歡迎你。", "開發者的關懷", MB_OK);
+	    } else {
+	        // 使用者點了「萬歲！」
+	        logMessage(LOG_SUCCESS, "SYSTEM", "使用者順利畢業，恭喜脫離苦海！");
+	    }
+	}
 }
 
 // --- 視窗回呼函式 ---
@@ -344,7 +384,7 @@ int main() {
     setColor(LOG_INFO);
     printf(" __________________________________________________________ \n");
     printf("|                                                          |\n");
-    printf("|         M R C P   D A T A   T O O L K I T   v2.7         |\n");
+    printf("|         M R C P   D A T A   T O O L K I T   v2.7.1       |\n");
     printf("|__________________________________________________________|\n\n");
     setColor(LOG_NORMAL);
 	
