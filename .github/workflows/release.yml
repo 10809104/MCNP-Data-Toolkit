@@ -1,0 +1,45 @@
+name: Update Latest Release Assets
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install MinGW
+        run: |
+          echo "C:\ProgramData\Chocolatey\bin" >> $GITHUB_PATH
+          echo "C:\ProgramData\Chocolatey\lib\mingw\tools\install\mingw64\bin" >> $GITHUB_PATH
+
+      - name: Compile Resource File
+        run: |
+          windres MCNP_Tool_private.rc -O coff -o resource.res
+
+      - name: Compile Program
+        # 編譯出 MCNP_Tool.exe
+        run: |
+          gcc main.c resource.res -o "MCNP_Tool.exe" -std=c99 -static -mwindows -lwininet -lshlwapi -lurlmon
+
+      - name: Update Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          # 這裡指定你要固定更新的 Tag 名稱
+          # 如果你現在的 Latest Tag 叫 v1.0，就改寫 v1.0
+          # 如果你想創一個專門放最新版的，可以用 latest-build
+          tag_name: latest-build 
+          name: "MCNP Tool (Latest Version)"
+          files: MCNP_Tool.exe
+          
+          # 關鍵設定：
+          append_body: true     # 把新訊息加在舊說明的後面，而不是蓋掉
+          overwrite: true       # 如果裡面已經有一個 MCNP_Tool.exe，就用新的蓋掉舊的
+          make_latest: true     # 確保這個 Release 永遠處於 Latest 狀態
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
