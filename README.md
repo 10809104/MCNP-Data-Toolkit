@@ -105,5 +105,11 @@
 2. **Excel 進程**：若腳本執行中斷，請檢查工作管理員中是否有殘留的 Excel 進程。
 
 SORRY,I cannot distinguish between MRCP and MCNP before v2.7.2.
+
 抱歉v2.7.2之前還分不清MRCP跟MCNP
+
+**Oh my, it's quite a struggle to convert everything to UTF-8. Please excuse any garbled characters that may appear.**
+
 Would you like me to refine the technical documentation for any of the specific C functions, such as the `loadSingleFileData` state machine logic?
+
+
