@@ -1,6 +1,6 @@
-# MRCP Data Toolkit v2.7.2
+# MCNP Data Toolkit v2.7.2
 
-**MRCP Data Toolkit** 是一款專為核能與醫學物理工程研究設計的高效能數據整合工具。它能將 MRCP 模擬產生的海量文字輸出檔案（`.o` 檔）轉化為結構化的科研報表。透過 C 語言的強大解析能力與 PowerShell 的 Excel 自動化技術，大幅縮短數據整理時間。
+**MCNP Data Toolkit** 是一款專為核能與醫學物理工程研究設計的高效能數據整合工具。它能將 MCNP 模擬產生的海量文字輸出檔案（`.o` 檔）轉化為結構化的科研報表。透過 C 語言的強大解析能力與 PowerShell 的 Excel 自動化技術，大幅縮短數據整理時間。
 
 ## 📸 成果展示 (Result Preview)
 
@@ -69,7 +69,7 @@
 
 ### 3. 一鍵生成報表
 
-在介面選取目標資料夾後，點擊 **「批次處理」**。解析完成後，系統將調用 PowerShell 在背景完成所有 Excel 排版，最終生成 `MRCP_Total_Summary.xlsx`。
+在介面選取目標資料夾後，點擊 **「批次處理」**。解析完成後，系統將調用 PowerShell 在背景完成所有 Excel 排版，最終生成 `MCNP_Total_Summary.xlsx`。
 
 ---
 
@@ -104,4 +104,6 @@
 1. **路徑檢查**：確保執行路徑中不包含特殊字元，以維持 PowerShell 腳本的穩定性。
 2. **Excel 進程**：若腳本執行中斷，請檢查工作管理員中是否有殘留的 Excel 進程。
 
+SORRY,I cannot distinguish between MRCP and MCNP before v2.7.2.
+抱歉v2.7.2之前還分不清MRCP跟MCNP
 Would you like me to refine the technical documentation for any of the specific C functions, such as the `loadSingleFileData` state machine logic?
