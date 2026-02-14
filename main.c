@@ -363,6 +363,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 // --- 主程式進入點 ---
 int main() {
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+	system("chcp 65001 > nul");
+
     AllocConsole();
     hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     freopen("CONOUT$", "w", stdout);

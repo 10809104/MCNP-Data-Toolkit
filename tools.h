@@ -1,5 +1,5 @@
 /* ================= KikKoh @2026 =================
-================ ª©Åv©Ò¦³¡AÂ½¦L¥²¨s =============== */
+================ ç‰ˆæ¬Šæ‰€æœ‰ï¼Œç¿»å°å¿…ç©¶ =============== */
 #define LINE_BUF 1024
 #define SPACE_THRESHOLD 5
 #define TALLY_KEY_LEN 11
@@ -8,12 +8,12 @@
 /* =================  Parser functions  ================= */
 
 /**
- * @brief Åª¨ú source.csv ¨Ã±N«e¨âÄæ¦s¤J DynamicTable
- * @details ¦¹¨ç¼Æ°õ¦æ¨â¦¸±½´y¡G²Ä¤@¦¸­pºâÁ`¦æ¼Æ¥H¤À°t°O¾ĞÅé¡A²Ä¤G¦¸¸ÑªR CSV ¤º®e¡C
- * ¸ÑªR®É¨ã³ÆÂ²³æªºª¬ºA¾÷³B²z¤Ş¸¹¡A¨Ã¦Û°Ê²¾°£¼Æ­È¤¤ªº¤d¤À¦ì³r¸¹¡C
- * @param filename ÀÉ®×¸ô®|»P¦WºÙ
- * @param dt       «ü¦V¹w¥ı«Å§iªº DynamicTable µ²ºc«ü¼Ğ
- * @return int     ¦¨¥\ªğ¦^Á`¦C¼Æ¡A¥¢±Ñªğ¦^ -1
+ * @brief è®€å– source.csv ä¸¦å°‡å‰å…©æ¬„å­˜å…¥ DynamicTable
+ * @details æ­¤å‡½æ•¸åŸ·è¡Œå…©æ¬¡æƒæï¼šç¬¬ä¸€æ¬¡è¨ˆç®—ç¸½è¡Œæ•¸ä»¥åˆ†é…è¨˜æ†¶é«”ï¼Œç¬¬äºŒæ¬¡è§£æ CSV å…§å®¹ã€‚
+ * è§£ææ™‚å…·å‚™ç°¡å–®çš„ç‹€æ…‹æ©Ÿè™•ç†å¼•è™Ÿï¼Œä¸¦è‡ªå‹•ç§»é™¤æ•¸å€¼ä¸­çš„åƒåˆ†ä½é€—è™Ÿã€‚
+ * @param filename æª”æ¡ˆè·¯å¾‘èˆ‡åç¨±
+ * @param dt       æŒ‡å‘é å…ˆå®£å‘Šçš„ DynamicTable çµæ§‹æŒ‡æ¨™
+ * @return int     æˆåŠŸè¿”å›ç¸½åˆ—æ•¸ï¼Œå¤±æ•—è¿”å› -1
  */
 int loadSourceCSV(const char *filename, DynamicTable *dt) {
     char line[LINE_BUF + 1];
@@ -21,22 +21,22 @@ int loadSourceCSV(const char *filename, DynamicTable *dt) {
 
     FILE *fp = fopen(filename, "r");
     if (!fp) {
-        printf("¿ù»~¡GµLªk¶}±Ò %s\n", filename);
+        printf("éŒ¯èª¤ï¼šç„¡æ³•é–‹å•Ÿ %s\n", filename);
         return -1;
     }
 
-    // --- ²Ä¤@¦¸±½´y¡G²Î­p¦³®Ä¦æ¼Æ ---
+    // --- ç¬¬ä¸€æ¬¡æƒæï¼šçµ±è¨ˆæœ‰æ•ˆè¡Œæ•¸ ---
     while (fgets(line, sizeof(line), fp)) {
-        if (strlen(line) > 1) totalRows++; // ²¤¹L§¹¥şªÅ¥Õªº¦æ
+        if (strlen(line) > 1) totalRows++; // ç•¥éå®Œå…¨ç©ºç™½çš„è¡Œ
     }
-    rewind(fp); // ±NÀÉ®×«ü¼Ğ­«¸m¦^¶}ÀY
+    rewind(fp); // å°‡æª”æ¡ˆæŒ‡æ¨™é‡ç½®å›é–‹é ­
 
-    // ®Ú¾Ú±½´yµ²ªGªì©l¤Æªí®æ°O¾ĞÅé (©T©wÅª¨ú«e 2 Äæ)
+    // æ ¹æ“šæƒæçµæœåˆå§‹åŒ–è¡¨æ ¼è¨˜æ†¶é«” (å›ºå®šè®€å–å‰ 2 æ¬„)
     initTable(dt, totalRows, 2);
 
     int r = 0;
     while (fgets(line, sizeof(line), fp) && r < totalRows) {
-        line[strcspn(line, "\r\n")] = 0; // ²¾°£¦æ§Àªº´«¦æ²Å¸¹
+        line[strcspn(line, "\r\n")] = 0; // ç§»é™¤è¡Œå°¾çš„æ›è¡Œç¬¦è™Ÿ
 
         char *ptr = line;
         for (int col = 0; col < 2; col++) {
@@ -44,16 +44,16 @@ int loadSourceCSV(const char *filename, DynamicTable *dt) {
             int t_idx = 0;
             int in_quotes = 0;
 
-            // --- ª¬ºA¾÷¸ÑªR³æ­Ó CSV Äæ¦ì ---
+            // --- ç‹€æ…‹æ©Ÿè§£æå–®å€‹ CSV æ¬„ä½ ---
             while (*ptr != '\0') {
                 if (*ptr == '"') {
-                    in_quotes = !in_quotes; // ¤Á´«¡u¤Ş¸¹¤º¡v¼Ò¦¡
+                    in_quotes = !in_quotes; // åˆ‡æ›ã€Œå¼•è™Ÿå…§ã€æ¨¡å¼
                 } else if (*ptr == ',' && !in_quotes) {
-                    ptr++; // ¹J¨ì§@¬°¤À¹j²Åªº³r¸¹¡A¸õ¹L¨Ãµ²§ô¦¹Äæ¦ìÅª¨ú
+                    ptr++; // é‡åˆ°ä½œç‚ºåˆ†éš”ç¬¦çš„é€—è™Ÿï¼Œè·³éä¸¦çµæŸæ­¤æ¬„ä½è®€å–
                     break; 
                 } else {
-                    // ­Y«D³r¸¹¡A©Î¬O¦b¤Ş¸¹¤ºªº³r¸¹¡]¦p "11,513"¡^
-                    // ®Ú¾Ú»İ¨D¡G§Ú­Ì¿ï¾Ü©¿²¤¼Æ¦r¤¤ªº³r¸¹¥H¤è«K«áÄòÂà¬°¼Æ­È
+                    // è‹¥éé€—è™Ÿï¼Œæˆ–æ˜¯åœ¨å¼•è™Ÿå…§çš„é€—è™Ÿï¼ˆå¦‚ "11,513"ï¼‰
+                    // æ ¹æ“šéœ€æ±‚ï¼šæˆ‘å€‘é¸æ“‡å¿½ç•¥æ•¸å­—ä¸­çš„é€—è™Ÿä»¥æ–¹ä¾¿å¾ŒçºŒè½‰ç‚ºæ•¸å€¼
                     if (*ptr != ',') {
                         if (t_idx < sizeof(temp) - 1) temp[t_idx++] = *ptr;
                     } 
@@ -61,12 +61,12 @@ int loadSourceCSV(const char *filename, DynamicTable *dt) {
                 ptr++;
             }
 
-            // ±N¸ÑªRµ²ªG¦s¤Jªí®æµ²ºc
+            // å°‡è§£æçµæœå­˜å…¥è¡¨æ ¼çµæ§‹
             dt->table[r][col].type = TYPE_STRING;
             dt->table[r][col].data.s = strdup(temp);
-            // ½T»{ strdup ¬O§_¦¨
+            // ç¢ºèª strdup æ˜¯å¦æˆ
             if (dt->table[r][col].data.s == NULL && strlen(temp) > 0) {
-                fprintf(stderr, "°O¾ĞÅé¤À°t¥¢±Ñ (strdup)\n");
+                fprintf(stderr, "è¨˜æ†¶é«”åˆ†é…å¤±æ•— (strdup)\n");
                 fclose(fp);
                 clearTable(dt);
                 return -1;
@@ -80,7 +80,7 @@ int loadSourceCSV(const char *filename, DynamicTable *dt) {
 }
 
 /**
- * @brief ÄÀ©ñ FileInfo µ²ºc¤º³¡ªº°ÊºA°O¾ĞÅé
+ * @brief é‡‹æ”¾ FileInfo çµæ§‹å…§éƒ¨çš„å‹•æ…‹è¨˜æ†¶é«”
  */
 void free_file_info(FileInfo *info) {
     if (info && info->labels) {
@@ -88,18 +88,18 @@ void free_file_info(FileInfo *info) {
             if (info->labels[k]) free(info->labels[k]);
         }
         free(info->labels);
-        info->labels = NULL; // Á×§K Double Free
+        info->labels = NULL; // é¿å… Double Free
     }
 }
 
 /**
- * @brief ¾ã¦X«¬°Æµ{¦¡¡G§ì¨ú MCNP ¿é¥XÀÉªº¼ĞÅÒ¦WºÙ»PÁ`²É¤l¼Æ
- * @details ¥]§t¤T­Ó¨BÆJ¡G
- * 1. °»´ú Tally ¼Æ¶q»P­ì©l¼ĞÅÒ¡C
- * 2. Åª¨ú­º¦æ¼Æ¾Ú¶i¦æ¡u®Õ·Ç¡v¡A­Y¬Y¼ĞÅÒ¤UµL¼Æ¾Ú«h¦Û°Ê­ç°£¸Ó¼ĞÅÒ¨Ã¦V«e»¼¸É¡C
- * 3. ±qÀÉ®×¥½§À¤Ï¦V·j´M°õ¦æµ²§ôªº²É¤l¼Æ¡C
- * @param path ÀÉ®×¸ô®|
- * @return FileInfo ¥]§t¼ĞÅÒ²M³æ¡B¼ĞÅÒ¼Æ¤Î²É¤l¼Æªºµ²ºc
+ * @brief æ•´åˆå‹å‰¯ç¨‹å¼ï¼šæŠ“å– MCNP è¼¸å‡ºæª”çš„æ¨™ç±¤åç¨±èˆ‡ç¸½ç²’å­æ•¸
+ * @details åŒ…å«ä¸‰å€‹æ­¥é©Ÿï¼š
+ * 1. åµæ¸¬ Tally æ•¸é‡èˆ‡åŸå§‹æ¨™ç±¤ã€‚
+ * 2. è®€å–é¦–è¡Œæ•¸æ“šé€²è¡Œã€Œæ ¡æº–ã€ï¼Œè‹¥æŸæ¨™ç±¤ä¸‹ç„¡æ•¸æ“šå‰‡è‡ªå‹•å‰”é™¤è©²æ¨™ç±¤ä¸¦å‘å‰éè£œã€‚
+ * 3. å¾æª”æ¡ˆæœ«å°¾åå‘æœå°‹åŸ·è¡ŒçµæŸçš„ç²’å­æ•¸ã€‚
+ * @param path æª”æ¡ˆè·¯å¾‘
+ * @return FileInfo åŒ…å«æ¨™ç±¤æ¸…å–®ã€æ¨™ç±¤æ•¸åŠç²’å­æ•¸çš„çµæ§‹
  */
 FileInfo get_file_info(const char *path) {
     FileInfo report = {-1, NULL, 0, 0, 0};
@@ -108,35 +108,35 @@ FileInfo get_file_info(const char *path) {
 
     char line[LINE_BUF];
     
-    // --- ·s¼W³¡¤À¡G¥şÀÉ±½´y²Î­p "tally" Á`¥X²{¦¸¼Æ ---
+    // --- æ–°å¢éƒ¨åˆ†ï¼šå…¨æª”æƒæçµ±è¨ˆ "tally" ç¸½å‡ºç¾æ¬¡æ•¸ ---
     while (fgets(line, sizeof(line), fp)) {
         char *ptr = line;
         while ((ptr = strstr(ptr, TALLY_KEY)) != NULL) {
-            report.total_count++; // ²Î­p¥şÀÉ¥X²{ÃöÁä¦rªºÁ`¼Æ
-            ptr += TALLY_KEY_LEN; // ¸õ¹L "    tally    " ªø«×Ä~Äò·j´M
+            report.total_count++; // çµ±è¨ˆå…¨æª”å‡ºç¾é—œéµå­—çš„ç¸½æ•¸
+            ptr += TALLY_KEY_LEN; // è·³é "    tally    " é•·åº¦ç¹¼çºŒæœå°‹
         }
     }
-    // printf("ÀÉ®× %s ¥X²{ %d ­Ó¼Æ¾Ú\n", path, report.total_count)
-    rewind(fp); // ²Î­p§¹²¦¡A±NÀÉ®×«ü¼Ğ­«¸m¦^¶}ÀY¥H¶i¦æ«áÄò¸ÑªR
+    // printf("æª”æ¡ˆ %s å‡ºç¾ %d å€‹æ•¸æ“š\n", path, report.total_count)
+    rewind(fp); // çµ±è¨ˆå®Œç•¢ï¼Œå°‡æª”æ¡ˆæŒ‡æ¨™é‡ç½®å›é–‹é ­ä»¥é€²è¡Œå¾ŒçºŒè§£æ
     
-    // --- ²Ä¤@³¡¤À¡G±qÀÉ®×¤¤¬q§ì¨úµ²ºc¸ê°T ---
+    // --- ç¬¬ä¸€éƒ¨åˆ†ï¼šå¾æª”æ¡ˆä¸­æ®µæŠ“å–çµæ§‹è³‡è¨Š ---
     while (fgets(line, sizeof(line), fp)) {
-        // ´M§äÃöÁä¦r¦æ¡A¼Ğ¥Ü¼Æ¾Ú°Ï¶ôªº¶}©l
+        // å°‹æ‰¾é—œéµå­—è¡Œï¼Œæ¨™ç¤ºæ•¸æ“šå€å¡Šçš„é–‹å§‹
         if (strstr(line, TALLY_KEY)) {
             
-            // --- ¨BÆJ A: ²Î­p¦¹¦æ¥X²{´X¦¸ "tally"¡A¥Nªí¦³´X²Õ¼Æ¾Ú (Groups) ---
+            // --- æ­¥é©Ÿ A: çµ±è¨ˆæ­¤è¡Œå‡ºç¾å¹¾æ¬¡ "tally"ï¼Œä»£è¡¨æœ‰å¹¾çµ„æ•¸æ“š (Groups) ---
             char *ptr = line;
             while ((ptr = strstr(ptr, TALLY_KEY)) != NULL) {
                 report.tally_count++;
-                ptr += TALLY_KEY_LEN; // ¸õ¹LÃöÁä¦rÄ~Äò·j´M
+                ptr += TALLY_KEY_LEN; // è·³éé—œéµå­—ç¹¼çºŒæœå°‹
             }
 
-            // --- ¨BÆJ B: ¸ÑªR¼ĞÅÒ¦æ (Labels) ---
+            // --- æ­¥é©Ÿ B: è§£ææ¨™ç±¤è¡Œ (Labels) ---
             if (fgets(line, sizeof(line), fp)) {
                 char temp[LINE_BUF];
                 strcpy(temp, line);
                 
-                // 1. ­pºâ¸Ó¦æÁ`Äæ¦ì¼Æ (±Æ°£ nps ¼ĞÅÒ)
+                // 1. è¨ˆç®—è©²è¡Œç¸½æ¬„ä½æ•¸ (æ’é™¤ nps æ¨™ç±¤)
                 int total_fields = 0;
                 char *token = strtok(temp, " \t\n");
                 while (token) {
@@ -144,23 +144,23 @@ FileInfo get_file_info(const char *path) {
                     token = strtok(NULL, " \t\n");
                 }
             
-                // ­pºâ¨C¤@²Õ Tally À³¦³ªº¼ĞÅÒ¼Æ (¨Ò¦p 15 Äæ / 3 ²Õ = 5 ¼ĞÅÒ/²Õ)
+                // è¨ˆç®—æ¯ä¸€çµ„ Tally æ‡‰æœ‰çš„æ¨™ç±¤æ•¸ (ä¾‹å¦‚ 15 æ¬„ / 3 çµ„ = 5 æ¨™ç±¤/çµ„)
                 if (report.tally_count > 0) {
                     report.label_count = total_fields / report.tally_count;
                 }
             
-                // 2. ®Ú¾Ú¨C¤@²Õªº¼ĞÅÒ¼Æ¤À°t°ÊºA°O¾ĞÅé (¦r¦ê°}¦C)
+                // 2. æ ¹æ“šæ¯ä¸€çµ„çš„æ¨™ç±¤æ•¸åˆ†é…å‹•æ…‹è¨˜æ†¶é«” (å­—ä¸²é™£åˆ—)
                 if (report.label_count > 0) {
                     report.labels = (char **)malloc(report.label_count * sizeof(char *));
                     
                     if (!report.labels) {
-                        fprintf(stderr, "µLªk¬°¼ĞÅÒ¤À°t°O¾ĞÅé\n");
+                        fprintf(stderr, "ç„¡æ³•ç‚ºæ¨™ç±¤åˆ†é…è¨˜æ†¶é«”\n");
                         fclose(fp);
                         return report;
                     }
                     for (int k = 0; k < report.label_count; k++) report.labels[k] = NULL;
                     
-                    // 3. ¥u¶ñ¤J¡u²Ä¤@²Õ¡vªº¼ĞÅÒ¦WºÙ§@¬°¥Nªí
+                    // 3. åªå¡«å…¥ã€Œç¬¬ä¸€çµ„ã€çš„æ¨™ç±¤åç¨±ä½œç‚ºä»£è¡¨
                     strcpy(temp, line);
                     token = strtok(temp, " \t\n");
                     int idx = 0;
@@ -184,35 +184,35 @@ FileInfo get_file_info(const char *path) {
                 }
             }
             
-            // --- ¨BÆJ C: ¼Æ¾Ú¹ï»ô®Õ·Ç (Calibration) ---
-            // Åª¨ú²Ä¤@µ§¼Æ¾Ú¦æ¡A½T»{­ş¨Ç¼ĞÅÒ¬O¦³¹ê»Ú¹ïÀ³¼Æ¾Úªº
+            // --- æ­¥é©Ÿ C: æ•¸æ“šå°é½Šæ ¡æº– (Calibration) ---
+            // è®€å–ç¬¬ä¸€ç­†æ•¸æ“šè¡Œï¼Œç¢ºèªå“ªäº›æ¨™ç±¤æ˜¯æœ‰å¯¦éš›å°æ‡‰æ•¸æ“šçš„
             if (fgets(line, sizeof(line), fp)) { 
                 char *ptr = line;
                 int offset, space_len;
                 long long nps_val;
             
-                // A. ¥ı¸õ¹L¶}ÀYªº NPS ¼Æ­È
+                // A. å…ˆè·³éé–‹é ­çš„ NPS æ•¸å€¼
                 if (sscanf(ptr, "%lld%n", &nps_val, &offset) == 1) {
                     ptr += offset;
                 }
             
-                // B. ÀË¬d¼ĞÅÒ»P¼Æ¾Úªº¹ïÀ³ª¬ªp
-                int actual_idx = 0; // °O¿ı¹ê»Ú¦³¼Æ¾Úªº¼ĞÅÒ¯Á¤Ş
+                // B. æª¢æŸ¥æ¨™ç±¤èˆ‡æ•¸æ“šçš„å°æ‡‰ç‹€æ³
+                int actual_idx = 0; // è¨˜éŒ„å¯¦éš›æœ‰æ•¸æ“šçš„æ¨™ç±¤ç´¢å¼•
                 for (int i = 0; i < report.label_count; i++) {
-                    // °»´ú¼Æ¾Ú¶¡ªºªÅ®æªø«×
+                    // åµæ¸¬æ•¸æ“šé–“çš„ç©ºæ ¼é•·åº¦
                     space_len = strspn(ptr, " ");
                     
-                    // ­YªÅ®æ¹Lªø (¨Ò¦p > SPACE_THRESHOLD)¡A³q±`¥Nªí¸Ó¿é¥X¦ì¸m¬°ªÅ¡A¼Æ¾Ú¯Ê¥¢
+                    // è‹¥ç©ºæ ¼éé•· (ä¾‹å¦‚ > SPACE_THRESHOLD)ï¼Œé€šå¸¸ä»£è¡¨è©²è¼¸å‡ºä½ç½®ç‚ºç©ºï¼Œæ•¸æ“šç¼ºå¤±
                     if (space_len > SPACE_THRESHOLD) { 
-                        free(report.labels[i]); // ÄÀ©ñµL®Ä¼ĞÅÒ
+                        free(report.labels[i]); // é‡‹æ”¾ç„¡æ•ˆæ¨™ç±¤
                         report.labels[i] = NULL;
                     } else {
-                        // °»´ú¨ì¼Æ¾Ú¡AÅª¨ú¨Ã±N«ü¼Ğ²¾¦Ü¤U¤@­Ó¼Æ­È
+                        // åµæ¸¬åˆ°æ•¸æ“šï¼Œè®€å–ä¸¦å°‡æŒ‡æ¨™ç§»è‡³ä¸‹ä¸€å€‹æ•¸å€¼
                         double temp_val;
                         if (sscanf(ptr, "%lf%n", &temp_val, &offset) == 1) {
                             ptr += offset;
                             
-                            // ­Y«e¤è¦³¼ĞÅÒ³Q­ç°£¡A±N«á¤è¦³®Ä¼ĞÅÒ©¹«e»¼¸É
+                            // è‹¥å‰æ–¹æœ‰æ¨™ç±¤è¢«å‰”é™¤ï¼Œå°‡å¾Œæ–¹æœ‰æ•ˆæ¨™ç±¤å¾€å‰éè£œ
                             if (actual_idx != i) {
                                 report.labels[actual_idx] = report.labels[i];
                                 report.labels[i] = NULL;
@@ -221,16 +221,16 @@ FileInfo get_file_info(const char *path) {
                         }
                     }
                 }
-                // C. §ó·s³Ì²×¦³®Äªº¼ĞÅÒ¼Æ¶q
+                // C. æ›´æ–°æœ€çµ‚æœ‰æ•ˆçš„æ¨™ç±¤æ•¸é‡
                 report.label_count = actual_idx;
             }
             
-            break; // §¹¦¨µ²ºc§ì¨ú¡A¸õ¥XÀÉ®×±½´y
+            break; // å®Œæˆçµæ§‹æŠ“å–ï¼Œè·³å‡ºæª”æ¡ˆæƒæ
         }
     }
     
-    // --- ²Ä¤G³¡¤À¡G¤Ï¦V±½´y§ì¨ú²É¤lÁ`¼Æ ---
-    // ±qÀÉ®×¥½§À¦V«e¸õ 1024 ¦ì¤¸²Õ¡A®Ä²v¤ñ±qÀY±½´y°ª
+    // --- ç¬¬äºŒéƒ¨åˆ†ï¼šåå‘æƒææŠ“å–ç²’å­ç¸½æ•¸ ---
+    // å¾æª”æ¡ˆæœ«å°¾å‘å‰è·³ 1024 ä½å…ƒçµ„ï¼Œæ•ˆç‡æ¯”å¾é ­æƒæé«˜
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     long read_pos = (file_size > LINE_BUF) ? (file_size - LINE_BUF) : 0;
@@ -250,14 +250,14 @@ FileInfo get_file_info(const char *path) {
 }
 
 /**
- * @brief ÀÉ¦W±Æ§Ç¥Îªº¤ñ¸û¨ç¼Æ (qsort ©I¥s)
+ * @brief æª”åæ’åºç”¨çš„æ¯”è¼ƒå‡½æ•¸ (qsort å‘¼å«)
  */
 int compareNames(const void *a, const void *b) {
     return strcmp(*(const char **)a, *(const char **)b);
 }
 
 /**
- * @brief ÄÀ©ñ¦r¦ê²M³æ¦û¥Îªº°O¾ĞÅé
+ * @brief é‡‹æ”¾å­—ä¸²æ¸…å–®ä½”ç”¨çš„è¨˜æ†¶é«”
  */
 void cleanup_list(char **list, int count) {
     if (!list) return;
@@ -268,23 +268,23 @@ void cleanup_list(char **list, int count) {
 }
 
 /**
- * @brief ¨ú±o«ü©w¸ê®Æ§¨¤º©Ò¦³ .o ÀÉ®×¨Ã±Æ§Ç
- * @param path      ¸ê®Æ§¨¸ô®|
- * @param list_ptr  ¦^¶ÇÀÉ®×²M³æ«ü¼Ğªº¦a§}
- * @return int      §ä¨ìªºÀÉ®×Á`¼Æ¡A¥¢±Ñªğ¦^ -1
+ * @brief å–å¾—æŒ‡å®šè³‡æ–™å¤¾å…§æ‰€æœ‰ .o æª”æ¡ˆä¸¦æ’åº
+ * @param path      è³‡æ–™å¤¾è·¯å¾‘
+ * @param list_ptr  å›å‚³æª”æ¡ˆæ¸…å–®æŒ‡æ¨™çš„åœ°å€
+ * @return int      æ‰¾åˆ°çš„æª”æ¡ˆç¸½æ•¸ï¼Œå¤±æ•—è¿”å› -1
  */
 int get_sorted_o_files(const char *path, char ***list_ptr) {
     DIR *dir = opendir(path);
     if (!dir) {
-        perror("µLªk¶}±Ò¸ê®Æ§¨");
+        perror("ç„¡æ³•é–‹å•Ÿè³‡æ–™å¤¾");
         return -1;
     }
 
     int count = 0;
-    int capacity = 25; // ªì©l¤À°tªÅ¶¡
+    int capacity = 25; // åˆå§‹åˆ†é…ç©ºé–“
     char **fileList = malloc(capacity * sizeof(char *));
     if (!fileList) {
-        perror("µLªk¤À°tÀÉ®×¦Cªí°O¾ĞÅé");
+        perror("ç„¡æ³•åˆ†é…æª”æ¡ˆåˆ—è¡¨è¨˜æ†¶é«”");
         closedir(dir);
         return -1;
     }
@@ -293,12 +293,12 @@ int get_sorted_o_files(const char *path, char ***list_ptr) {
     while ((ent = readdir(dir)) != NULL) {
         char *ext = strrchr(ent->d_name, '.');
         
-        // ¥u¿z¿ï¦r§À¬° .o ªºÀÉ®×
+        // åªç¯©é¸å­—å°¾ç‚º .o çš„æª”æ¡ˆ
         if (ext && strcmp(ext, ".o") == 0) {
-            // °ÊºAÂX®i°}¦C®e¶q
+            // å‹•æ…‹æ“´å±•é™£åˆ—å®¹é‡
             if (count >= capacity) {
                 capacity *= 2;
-                // --- °O¾ĞÅéÀË¬d : realloc ÂX®i®e¶q ---
+                // --- è¨˜æ†¶é«”æª¢æŸ¥ : realloc æ“´å±•å®¹é‡ ---
                 char **tempList = realloc(fileList, capacity * sizeof(char *));
                 if (!tempList) {
                     closedir(dir);
@@ -318,7 +318,7 @@ int get_sorted_o_files(const char *path, char ***list_ptr) {
     }
     closedir(dir);
 
-    // ¶i¦æ¦r¥À¶¶§Ç±Æ§Ç
+    // é€²è¡Œå­—æ¯é †åºæ’åº
     if (count > 0) {
         qsort(fileList, count, sizeof(char *), compareNames);
     }
@@ -328,36 +328,36 @@ int get_sorted_o_files(const char *path, char ***list_ptr) {
 }
 
 /**
- * @brief ±q³æ¤@¿é¥XÀÉ¸ü¤J¯S©w²É¤l¼Æ¤Uªº¼Æ¾Ú
- * @param path      ÀÉ®×¸ô®|
- * @param dt        ¥Ø¼Ğ DynamicTable
- * @param particles ­n·j´Mªº¥Ø¼Ğ²É¤l¼Æ (NPS)
- * @param groups    Tally ²Õ¼Æ
- * @param set       ¨C²Õ¼ĞÅÒ¼Æ
- * @param labels    ¼ĞÅÒ¦WºÙ°}¦C
- * @return int      ¦¨¥\ªğ¦^ 0¡A¥¢±Ñªğ¦^ -1
+ * @brief å¾å–®ä¸€è¼¸å‡ºæª”è¼‰å…¥ç‰¹å®šç²’å­æ•¸ä¸‹çš„æ•¸æ“š
+ * @param path      æª”æ¡ˆè·¯å¾‘
+ * @param dt        ç›®æ¨™ DynamicTable
+ * @param particles è¦æœå°‹çš„ç›®æ¨™ç²’å­æ•¸ (NPS)
+ * @param groups    Tally çµ„æ•¸
+ * @param set       æ¯çµ„æ¨™ç±¤æ•¸
+ * @param labels    æ¨™ç±¤åç¨±é™£åˆ—
+ * @return int      æˆåŠŸè¿”å› 0ï¼Œå¤±æ•—è¿”å› -1
  */
 int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, int groups, int set, char **labels) {
     FILE *fp = fopen(path, "r");
     if (!fp) return -1;
 
-    int state = 0; // 0: ´M§ä Tally °Ï¶ô, 1: ´M§ä¼Æ¾Ú¦C
+    int state = 0; // 0: å°‹æ‰¾ Tally å€å¡Š, 1: å°‹æ‰¾æ•¸æ“šåˆ—
     
-    int count = 0; // °O¿ı³B²z¤F´X¦¸¤j°Ï¶ô
+    int count = 0; // è¨˜éŒ„è™•ç†äº†å¹¾æ¬¡å¤§å€å¡Š
     char line[LINE_BUF]; 
     
-    // --- ³]©wªí®æ¼ĞÀY (Row 0) ---
+    // --- è¨­å®šè¡¨æ ¼æ¨™é ­ (Row 0) ---
     dt->table[0][0].type = TYPE_STRING;
     dt->table[0][0].data.s = strdup("no."); 
     if (!dt->table[0][0].data.s) {
         fclose(fp);
-        return -1;          // ªíÀY¥¢±Ñ¡Aª½±µªğ¦^¡]µL»İ²M²z¨ä¥L¡A¦]¬°©|¥¼°t¸m¡^
+        return -1;          // è¡¨é ­å¤±æ•—ï¼Œç›´æ¥è¿”å›ï¼ˆç„¡éœ€æ¸…ç†å…¶ä»–ï¼Œå› ç‚ºå°šæœªé…ç½®ï¼‰
     }
     for (int i = 0; i < set; i++) {
         dt->table[0][i+1].type = TYPE_STRING;
         dt->table[0][i+1].data.s = strdup(labels[i]);
         if (!dt->table[0][i+1].data.s) {
-            // ÄÀ©ñ¤§«e¤w¦¨¥\°t¸mªºªíÀY¦r¦ê
+            // é‡‹æ”¾ä¹‹å‰å·²æˆåŠŸé…ç½®çš„è¡¨é ­å­—ä¸²
             for (int j = 0; j < i; j++) {
                 free(dt->table[0][j+1].data.s);
                 dt->table[0][j+1].data.s = NULL;
@@ -370,14 +370,14 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
     }
 
     while (fgets(line, sizeof(line), fp)) {
-        // 1. §ì¨ú¥]§t "tally" ªº¨º¤@¦C¡A´£¨ú½s¸¹ (¦p 4, 14, 24)
+        // 1. æŠ“å–åŒ…å« "tally" çš„é‚£ä¸€åˆ—ï¼Œæå–ç·¨è™Ÿ (å¦‚ 4, 14, 24)
         if (strstr(line, TALLY_KEY) && state == 0) {
             int tally_count = 0;
             char *ptr = line;
             
             while ((ptr = strstr(ptr, TALLY_KEY)) != NULL && tally_count < groups) {
-                ptr += TALLY_KEY_LEN; // ¸õ¹LÃöÁä¦r
-                while (*ptr == ' ' || *ptr == '\t') ptr++; // ²¤¹LªÅ¥Õ
+                ptr += TALLY_KEY_LEN; // è·³éé—œéµå­—
+                while (*ptr == ' ' || *ptr == '\t') ptr++; // ç•¥éç©ºç™½
                 
                 int len = 0;
                 while (ptr[len] != ' ' && ptr[len] != '\t' && ptr[len] != '\0' && 
@@ -386,7 +386,7 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
                 }
 
                 if (len > 1) {
-                    // ­pºâ¦¹¼Æ¾ÚÀ³¦s©ñªº¦C¯Á¤Ş (¦Ò¼{¦h­Ó°Ï¶ôªº°¾²¾)
+                    // è¨ˆç®—æ­¤æ•¸æ“šæ‡‰å­˜æ”¾çš„åˆ—ç´¢å¼• (è€ƒæ…®å¤šå€‹å€å¡Šçš„åç§»)
                     int target_row = count * groups + tally_count + 1;
                     if (target_row >= dt->rows) {
 					    fclose(fp);
@@ -394,7 +394,7 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
 					}
                     dt->table[target_row][0].type = TYPE_STRING;
                     
-                    // ´£¨ú Tally ½s¸¹¨Ã¥h§À (¨Ì¾Ú­ìÅŞ¿è)
+                    // æå– Tally ç·¨è™Ÿä¸¦å»å°¾ (ä¾æ“šåŸé‚è¼¯)
                     char *temp_id = (char *)malloc(len); 
                     if (temp_id) {
                         strncpy(temp_id, ptr, len - 1); 
@@ -406,18 +406,18 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
                 }
                 ptr += len;
             }
-            state = 1; // ¤Á´«ª¬ºA¡G·Ç³Æ´M§ä¤U¤è¹ïÀ³²É¤l¼Æªº¼Æ¾Ú
+            state = 1; // åˆ‡æ›ç‹€æ…‹ï¼šæº–å‚™å°‹æ‰¾ä¸‹æ–¹å°æ‡‰ç²’å­æ•¸çš„æ•¸æ“š
             continue;
         }
         
-        // 2. §ì¨ú¹ïÀ³²É¤l¼Æ (NPS) ªº¼Æ¾Ú¦C
+        // 2. æŠ“å–å°æ‡‰ç²’å­æ•¸ (NPS) çš„æ•¸æ“šåˆ—
         long long nps_check;
         if (sscanf(line, "%lld", &nps_check) == 1 && nps_check == particles && state == 1) {
             int data_group_idx = 0; 
             char *token = strtok(line, " \t\n");
-            token = strtok(NULL, " \t\n"); // ¸õ¹L NPS Äæ¦ì¥»¨­
+            token = strtok(NULL, " \t\n"); // è·³é NPS æ¬„ä½æœ¬èº«
 
-            // ¨Ì§Ç¶ñ¤J¦U­Ó Tally ²Õªº¼Æ¾Ú
+            // ä¾åºå¡«å…¥å„å€‹ Tally çµ„çš„æ•¸æ“š
             while (token != NULL && data_group_idx < groups) {
                 int target_row = count * groups + data_group_idx + 1;
                 if (target_row >= dt->rows) {
@@ -435,8 +435,8 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
                 data_group_idx++;
             }
 
-            count++;   // §¹¦¨¤@²Õ (¥]§t©Ò¦³ groups) ªº³B²z
-            state = 0; // ¦^¨ì´M§ä¤U¤@­Ó Tally °Ï¶ôªºª¬ºA
+            count++;   // å®Œæˆä¸€çµ„ (åŒ…å«æ‰€æœ‰ groups) çš„è™•ç†
+            state = 0; // å›åˆ°å°‹æ‰¾ä¸‹ä¸€å€‹ Tally å€å¡Šçš„ç‹€æ…‹
             continue;
         }
     }
@@ -446,12 +446,12 @@ int loadSingleFileData(const char* path, DynamicTable* dt, long long particles, 
 }
 
 /**
- * @brief ²£¥Í³Ì²×·JÁ`³øªí CSV
- * @details ±N source.csv ªº°òÂ¦¸ê°T»P¦h­Ó .o ÀÉ¸ÑªR¥Xªº¼Æ¾Ú¾î¦V¦X¨Ö¡C
- * @param folder  ¿é¥X¸ê®Æ§¨¦WºÙ
- * @param origin  ¨Ó¦Û source.csv ªº­ì©lªí®æ
- * @param myData  ¥]§t©Ò¦³ÀÉ®×¼Æ¾Úªº TableSet
- * @param myFiles ÀÉ¦W²M³æ (¥Î©ó´£¨ú¼ĞÀY)
+ * @brief ç”¢ç”Ÿæœ€çµ‚å½™ç¸½å ±è¡¨ CSV
+ * @details å°‡ source.csv çš„åŸºç¤è³‡è¨Šèˆ‡å¤šå€‹ .o æª”è§£æå‡ºçš„æ•¸æ“šæ©«å‘åˆä½µã€‚
+ * @param folder  è¼¸å‡ºè³‡æ–™å¤¾åç¨±
+ * @param origin  ä¾†è‡ª source.csv çš„åŸå§‹è¡¨æ ¼
+ * @param myData  åŒ…å«æ‰€æœ‰æª”æ¡ˆæ•¸æ“šçš„ TableSet
+ * @param myFiles æª”åæ¸…å–® (ç”¨æ–¼æå–æ¨™é ­)
  */
 int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData, char** myFiles) {
     char out_path[512];
@@ -461,12 +461,12 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
 
     fputs("\xEF\xBB\xBF", fp); 
 
-    // --- Row 1: ¼ĞÀY ---
+    // --- Row 1: æ¨™é ­ ---
     fprintf(fp, "%s,,%s\n", 
             (origin->rows > 0 && origin->table[0][0].data.s) ? origin->table[0][0].data.s : "", 
             folder);
 
-    // --- Row 2: ´£¨úÀÉ¦W¼Æ­È ---
+    // --- Row 2: æå–æª”åæ•¸å€¼ ---
     fprintf(fp, ",,"); 
     for (int i = 0; i < myData->file_count; i++) {
         char temp_name[256];
@@ -479,13 +479,13 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
             char *pure_val = (last_dash) ? last_dash + 1 : temp_name;
             fprintf(fp, "%s", pure_val);
         }
-        // ®Ú¾ÚÄæ¦ì¼Æ¸É³r¸¹ (dt->cols + 1 ¬O¬°¤FÀÉ®×¶¡ªº¶¡¹j)
+        // æ ¹æ“šæ¬„ä½æ•¸è£œé€—è™Ÿ (dt->cols + 1 æ˜¯ç‚ºäº†æª”æ¡ˆé–“çš„é–“éš”)
         int col_count = (myData->tables[i].rows > 0) ? myData->tables[i].cols : 1;
         for (int c = 0; c <= col_count; c++) fprintf(fp, ",");
     }
     fprintf(fp, "\n");
 
-    // --- Row 3: ¿é¥X²Ó¶µ¼ĞÅÒ (no., mean, error...) ---
+    // --- Row 3: è¼¸å‡ºç´°é …æ¨™ç±¤ (no., mean, error...) ---
     fprintf(fp, ",,");
     for (int f = 0; f < myData->file_count; f++) {
         DynamicTable *dt = &(myData->tables[f]);
@@ -500,9 +500,9 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
     }
     fprintf(fp, "\n");
 
-    // --- Row 4 ¤§«á: ¹ï»ô¼Æ¾Ú¦C (¸Ñ¨Mªø«×¤£¤@°İÃD) ---
+    // --- Row 4 ä¹‹å¾Œ: å°é½Šæ•¸æ“šåˆ— (è§£æ±ºé•·åº¦ä¸ä¸€å•é¡Œ) ---
     
-    // 1. ­pºâ¥ş§½³Ì¤j¦æ¼Æ
+    // 1. è¨ˆç®—å…¨å±€æœ€å¤§è¡Œæ•¸
     int max_rows = origin->rows;
     for (int f = 0; f < myData->file_count; f++) {
         if (myData->tables[f].rows > max_rows) {
@@ -510,10 +510,10 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
         }
     }
 
-    // 2. ¥H max_rows ¬°°ò·Ç¿é¥X¡Ar ±q 1 ¶}©l (¸õ¹L¦Uªíªº¼ĞÀY)
+    // 2. ä»¥ max_rows ç‚ºåŸºæº–è¼¸å‡ºï¼Œr å¾ 1 é–‹å§‹ (è·³éå„è¡¨çš„æ¨™é ­)
     for (int r = 1; r < max_rows; r++) {
         
-        // --- A. ¿é¥X¥ª°¼ origin ¼Æ¾Ú (¨Ó·½ CSV) ---
+        // --- A. è¼¸å‡ºå·¦å´ origin æ•¸æ“š (ä¾†æº CSV) ---
         if (r < origin->rows && origin->table[r] != NULL) {
             const char *cell0 = (origin->table[r][0].type == TYPE_STRING) ? origin->table[r][0].data.s : "";
             const char *cell1 = (origin->table[r][1].type == TYPE_STRING) ? origin->table[r][1].data.s : "";
@@ -522,12 +522,12 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
             fprintf(fp, ",");
         }
 
-        // --- B. ¾î¦V¿é¥X¦U­Ó¸ÑªRÀÉ®×ªº¼Æ¾Ú ---
+        // --- B. æ©«å‘è¼¸å‡ºå„å€‹è§£ææª”æ¡ˆçš„æ•¸æ“š ---
         for (int f = 0; f < myData->file_count; f++) {
             DynamicTable *dt = &(myData->tables[f]);
             
             if (r < dt->rows && dt->table[r] != NULL) {
-                // ¸ÓÀÉ®×¦b¦¹¦æ¦³¼Æ¾Ú
+                // è©²æª”æ¡ˆåœ¨æ­¤è¡Œæœ‰æ•¸æ“š
                 for (int c = 0; c < dt->cols; c++) {
                     fprintf(fp, ",");
                     if (dt->table[r][c].type == TYPE_STRING) {
@@ -536,9 +536,9 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
                         fprintf(fp, "%g", dt->table[r][c].data.d); 
                     }
                 }
-                fprintf(fp, ","); // ÀÉ®×¶¡¹jªÅÄæ
+                fprintf(fp, ","); // æª”æ¡ˆé–“éš”ç©ºæ¬„
             } else {
-                // ¸ÓÀÉ®×¸ûµu©ÎµL¼Æ¾Ú¡A¸É»ô¸ÓªíÀ³¦ûªºÄæ¦ì
+                // è©²æª”æ¡ˆè¼ƒçŸ­æˆ–ç„¡æ•¸æ“šï¼Œè£œé½Šè©²è¡¨æ‡‰ä½”çš„æ¬„ä½
                 int col_to_fill = (dt->rows > 0) ? dt->cols : 1;
                 for (int c = 0; c <= col_to_fill; c++) fprintf(fp, ",");
             }
@@ -547,6 +547,6 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
     }
 
     fclose(fp);
-    printf(" >> ³ø§i²£¥X§¹¦¨¡AÀÉ®×³Ì¦h¦³ %d µ§¼Æ¾Ú\n", max_rows);
+    printf(" >> å ±å‘Šç”¢å‡ºå®Œæˆï¼Œæª”æ¡ˆæœ€å¤šæœ‰ %d ç­†æ•¸æ“š\n", max_rows);
     return 0;
 }

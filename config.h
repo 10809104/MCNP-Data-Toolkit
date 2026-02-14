@@ -1,5 +1,5 @@
 /* ================= KikKoh @2026 =================
-================ ª©Åv©Ò¦³¡AÂ½¦L¥²¨s =============== */
+================ ç‰ˆæ¬Šæ‰€æœ‰ï¼Œç¿»å°å¿…ç©¶ =============== */
 
 #include <wininet.h>
 #include <urlmon.h>
@@ -8,75 +8,75 @@
 #pragma comment(lib, "urlmon.lib")
 #pragma comment(lib, "shell32.lib")
 
-// ===== ©w¸q¥Ø¼Ğ =====
-// Åv­­¬ŞµP 
+// ===== å®šç¾©ç›®æ¨™ =====
+// æ¬Šé™ç›¾ç‰Œ 
 #ifndef MB_ICONSHIELD
 #define MB_ICONSHIELD 0x0000004CL
 #endif
-// ª©¥»¥Ø¼Ğ
+// ç‰ˆæœ¬ç›®æ¨™
 #define CURRENT_VERSION "v2.7.2"
 #define VERSION_URL "https://raw.githubusercontent.com/10809104/MCNP-Data-Toolkit/main/version.txt"
 #define EXE_URL "https://github.com/10809104/MCNP-Data-Toolkit/releases/latest/download/MCNP_Tool.exe"
 
-/* ================= ¸ê®Æµ²ºc ================= */
-// ©w¸q¸ê®Æ«¬§OªTÁ|¡A¥Î¨Ó¼Ğ°O Cell ¥Ø«eÀx¦sªº¬O­şºØ¸ê®Æ
+/* ================= è³‡æ–™çµæ§‹ ================= */
+// å®šç¾©è³‡æ–™å‹åˆ¥æšèˆ‰ï¼Œç”¨ä¾†æ¨™è¨˜ Cell ç›®å‰å„²å­˜çš„æ˜¯å“ªç¨®è³‡æ–™
 typedef enum {
     TYPE_STRING, 
     TYPE_DOUBLE
 } DataType;
 
-// ©w¸q³æ¤@³æ¤¸®æµ²ºc
+// å®šç¾©å–®ä¸€å–®å…ƒæ ¼çµæ§‹
 typedef struct {
-    DataType type;      // °O¿ı«¬§O¼ĞÅÒ (Tag)
+    DataType type;      // è¨˜éŒ„å‹åˆ¥æ¨™ç±¤ (Tag)
     union {
-        char* s;        // Àx¦s¦r¦ê«ü¼Ğ («ü¦V°ÊºA¤À°tªº°O¾ĞÅé)
-        double d;       // Àx¦s­¿ºë«×¯BÂI¼Æ
-    } data;             // union ªÅ¶¡¦@¥Î¡A¸`¬Ù°O¾ĞÅé
+        char* s;        // å„²å­˜å­—ä¸²æŒ‡æ¨™ (æŒ‡å‘å‹•æ…‹åˆ†é…çš„è¨˜æ†¶é«”)
+        double d;       // å„²å­˜å€ç²¾åº¦æµ®é»æ•¸
+    } data;             // union ç©ºé–“å…±ç”¨ï¼Œç¯€çœè¨˜æ†¶é«”
 } Cell;
 
-// ©w¸q°ÊºA¤Gºûªí®æµ²ºc
+// å®šç¾©å‹•æ…‹äºŒç¶­è¡¨æ ¼çµæ§‹
 typedef struct {
-    int rows;           // ªí®æ¦C¼Æ
-    int cols;           // ªí®æÄæ¼Æ
-    Cell** table;       // ¤G¯Å«ü¼Ğ¡Gtable[row][col]
+    int rows;           // è¡¨æ ¼åˆ—æ•¸
+    int cols;           // è¡¨æ ¼æ¬„æ•¸
+    Cell** table;       // äºŒç´šæŒ‡æ¨™ï¼štable[row][col]
 } DynamicTable;
 
-// ©w¸qªí®æ¶°¦Xµ²ºc¡A¥Î¨ÓºŞ²z¦h­Ó .o ÀÉªº¼Æ¾Ú
+// å®šç¾©è¡¨æ ¼é›†åˆçµæ§‹ï¼Œç”¨ä¾†ç®¡ç†å¤šå€‹ .o æª”çš„æ•¸æ“š
 typedef struct {
-    int file_count;       // ÀÉ®×Á`¼Æ
-    DynamicTable* tables; // «ü¦V DynamicTable °}¦Cªº«ü¼Ğ
+    int file_count;       // æª”æ¡ˆç¸½æ•¸
+    DynamicTable* tables; // æŒ‡å‘ DynamicTable é™£åˆ—çš„æŒ‡æ¨™
 } TableSet;
 
-// ©w¸q³æ¤@ .o ÀÉ±o¨ìªº©T©w¼Æ¾Ú
+// å®šç¾©å–®ä¸€ .o æª”å¾—åˆ°çš„å›ºå®šæ•¸æ“š
 typedef struct {
-    long long particles; // ¾ú¥v²É¤l¼Æ
-    char **labels;       // °ÊºA¤Gºû°}¦C
-    int label_count;     // ¼ĞÅÒ¼Æ¶q
-    int tally_count;     // ¤@¦æ¦³¦h¤Ö¼Æ¾Ú 
-    int total_count;     // Á`¦@¦³¦h¤Ö¼Æ¾Ú 
+    long long particles; // æ­·å²ç²’å­æ•¸
+    char **labels;       // å‹•æ…‹äºŒç¶­é™£åˆ—
+    int label_count;     // æ¨™ç±¤æ•¸é‡
+    int tally_count;     // ä¸€è¡Œæœ‰å¤šå°‘æ•¸æ“š 
+    int total_count;     // ç¸½å…±æœ‰å¤šå°‘æ•¸æ“š 
 } FileInfo;
 
 /* =================  initial functions  ================= */
-// --- ¨ç¼Æ¹ê§@ ---
+// --- å‡½æ•¸å¯¦ä½œ ---
 
 /**
- * ªì©l¤Æ³æ±iªí®æ
- * @param dt «ü¦Vªí®æµ²ºcªº«ü¼Ğ
- * @param r  ¦C¼Æ
- * @param c  Äæ¼Æ
+ * åˆå§‹åŒ–å–®å¼µè¡¨æ ¼
+ * @param dt æŒ‡å‘è¡¨æ ¼çµæ§‹çš„æŒ‡æ¨™
+ * @param r  åˆ—æ•¸
+ * @param c  æ¬„æ•¸
  */
 void initTable(DynamicTable* dt, int r, int c) {
     dt->rows = r;
     dt->cols = c;
     
-    // ²Ä¤@¼h¡G°t¸m«ü¦V¦U¦C«ü¼ĞªºªÅ¶¡ («ü¼Ğ°}¦C)
+    // ç¬¬ä¸€å±¤ï¼šé…ç½®æŒ‡å‘å„åˆ—æŒ‡æ¨™çš„ç©ºé–“ (æŒ‡æ¨™é™£åˆ—)
     dt->table = (Cell**)malloc(r * sizeof(Cell*));
     
     for (int i = 0; i < r; i++) {
-        // ²Ä¤G¼h¡G¬°¨C¤@¦C°t¸m¹ê»Ú¦s©ñ Cell ªºªÅ¶¡
+        // ç¬¬äºŒå±¤ï¼šç‚ºæ¯ä¸€åˆ—é…ç½®å¯¦éš›å­˜æ”¾ Cell çš„ç©ºé–“
         dt->table[i] = (Cell*)malloc(c * sizeof(Cell));
         
-        // ªì©l¤Æ¨C­Ó Cell ªº¹w³]­È¡AÁ×§K²£¥ÍÀH¾÷©U§£­È
+        // åˆå§‹åŒ–æ¯å€‹ Cell çš„é è¨­å€¼ï¼Œé¿å…ç”¢ç”Ÿéš¨æ©Ÿåƒåœ¾å€¼
         for (int j = 0; j < c; j++) {
             dt->table[i][j].type = TYPE_DOUBLE;
             dt->table[i][j].data.d = 0.0;
@@ -85,75 +85,75 @@ void initTable(DynamicTable* dt, int r, int c) {
 }
 
 /**
- * ÄÀ©ñ³æ±iªí®æªº°O¾ĞÅé (¥Ñ¤º¦Ó¥~ÄÀ©ñ)
+ * é‡‹æ”¾å–®å¼µè¡¨æ ¼çš„è¨˜æ†¶é«” (ç”±å…§è€Œå¤–é‡‹æ”¾)
  */
 void clearTable(DynamicTable* dt) {
     if (!dt || !dt->table) return;
 
     for (int i = 0; i < dt->rows; i++) {
         for (int j = 0; j < dt->cols; j++) {
-            // ­«­n¡G¦pªG³æ¤¸®æ¦sªº¬O°ÊºA¤À°tªº¦r¦ê¡A¥²¶·¥ı free ¦r¦ê
+            // é‡è¦ï¼šå¦‚æœå–®å…ƒæ ¼å­˜çš„æ˜¯å‹•æ…‹åˆ†é…çš„å­—ä¸²ï¼Œå¿…é ˆå…ˆ free å­—ä¸²
             if (dt->table[i][j].type == TYPE_STRING && dt->table[i][j].data.s != NULL) {
                 free(dt->table[i][j].data.s);
             }
         }
-        // ÄÀ©ñ¨C¤@¦Cªº°O¾ĞÅé
+        // é‡‹æ”¾æ¯ä¸€åˆ—çš„è¨˜æ†¶é«”
         free(dt->table[i]);
     }
-    // ÄÀ©ñ«ü¼Ğ°}¦C¥»¨­
+    // é‡‹æ”¾æŒ‡æ¨™é™£åˆ—æœ¬èº«
     free(dt->table);
-    dt->table = NULL; // ³]¬° NULL Á×§K³¥«ü¼Ğ (dangling pointer)
+    dt->table = NULL; // è¨­ç‚º NULL é¿å…é‡æŒ‡æ¨™ (dangling pointer)
 }
 
 /**
- * «Ø¥ß¨Ãªì©l¤Æ TableSet (ºŞ²z¦h­ÓÀÉ®×)
- * r, c ¬O¹w´Á¨C­Ó .o ÀÉ·|¦³ªº¦æ¦C¼Æ
+ * å»ºç«‹ä¸¦åˆå§‹åŒ– TableSet (ç®¡ç†å¤šå€‹æª”æ¡ˆ)
+ * r, c æ˜¯é æœŸæ¯å€‹ .o æª”æœƒæœ‰çš„è¡Œåˆ—æ•¸
  */
 TableSet* createTableSet(int num_files, int r, int c) {
     if (num_files <= 0) return NULL;
 
-    // 1. °t¸mºŞ²zµ²ºc
+    // 1. é…ç½®ç®¡ç†çµæ§‹
     TableSet* ts = (TableSet*)malloc(sizeof(TableSet));
     if (!ts) return NULL;
 
     ts->file_count = num_files;
     
-    // 2. °t¸m Table °}¦CªÅ¶¡
+    // 2. é…ç½® Table é™£åˆ—ç©ºé–“
     ts->tables = (DynamicTable*)malloc(num_files * sizeof(DynamicTable));
     if (!ts->tables) {
         free(ts);
         return NULL;
     }
 
-    // 3. ³v¤@ªì©l¤Æ¤lªí®æ
+    // 3. é€ä¸€åˆå§‹åŒ–å­è¡¨æ ¼
     for (int i = 0; i < num_files; i++) {
-        // ³o¸Ì½Õ¥Î§A¤§«e¼g¦nªº initTable
+        // é€™è£¡èª¿ç”¨ä½ ä¹‹å‰å¯«å¥½çš„ initTable
         initTable(&(ts->tables[i]), r, c);
         
-        // ÃB¥~«OÀI¡G¦pªG initTable ¥¢±Ñ¡]¤º³¡ malloc ¥¢±Ñ¡^¡A
-        // ¹ê°È¤W³o¸Ì¥i¯à»İ­n§ó½ÆÂøªº²M²zÅŞ¿è¡A¦ı°ò¥»¨Ï¥Î¥ı³o¼Ë§Y¥i
+        // é¡å¤–ä¿éšªï¼šå¦‚æœ initTable å¤±æ•—ï¼ˆå…§éƒ¨ malloc å¤±æ•—ï¼‰ï¼Œ
+        // å¯¦å‹™ä¸Šé€™è£¡å¯èƒ½éœ€è¦æ›´è¤‡é›œçš„æ¸…ç†é‚è¼¯ï¼Œä½†åŸºæœ¬ä½¿ç”¨å…ˆé€™æ¨£å³å¯
     }
     
     return ts;
 }
 
 /**
- * ÄÀ©ñ¾ã­Ó TableSet ¸ê·½
+ * é‡‹æ”¾æ•´å€‹ TableSet è³‡æº
  */
 void freeTableSet(TableSet* ts) {
     if (!ts) return;
     
     for (int i = 0; i < ts->file_count; i++) {
-        // ©I¥s³æ±iªí®æªºÄÀ©ñ¨ç¼Æ
+        // å‘¼å«å–®å¼µè¡¨æ ¼çš„é‡‹æ”¾å‡½æ•¸
         clearTable(&(ts->tables[i]));
     }
-    // ÄÀ©ñªí®æ°}¦C»PºŞ²zµ²ºc
+    // é‡‹æ”¾è¡¨æ ¼é™£åˆ—èˆ‡ç®¡ç†çµæ§‹
     free(ts->tables);
     free(ts);
 }
 
 /**
- * §PÂ_¬O§_¬°ºŞ²z­û
+ * åˆ¤æ–·æ˜¯å¦ç‚ºç®¡ç†å“¡
  */
 BOOL IsRunningAsAdmin()
 {
@@ -177,7 +177,7 @@ BOOL IsRunningAsAdmin()
 }
 
 /**
- * ª©¥»§ó·s
+ * ç‰ˆæœ¬æ›´æ–°
  */
 void PerformUpdate(const char* downloadUrl) 
 { 
@@ -189,26 +189,26 @@ void PerformUpdate(const char* downloadUrl)
     GetModuleFileName(NULL, currentExe, MAX_PATH); 
     
     printf("[UPDATE] Downloading new version... Please wait.\n");
-    // --- 1. Åv­­ÀË¬d ---
-    // ¹Á¸Õ¦b exe ©Ò¦b¥Ø¿ı«Ø¥ß´ú¸ÕÀÉ®×¡A§PÂ_¬O§_¦³¼g¤JÅv­­
+    // --- 1. æ¬Šé™æª¢æŸ¥ ---
+    // å˜—è©¦åœ¨ exe æ‰€åœ¨ç›®éŒ„å»ºç«‹æ¸¬è©¦æª”æ¡ˆï¼Œåˆ¤æ–·æ˜¯å¦æœ‰å¯«å…¥æ¬Šé™
     char testFilePath[MAX_PATH];
     sprintf(testFilePath, "%s.tmp", currentExe);
     FILE *testFile = fopen(testFilePath, "w");
     if (!testFile) {
-        int result = MessageBox(NULL, "§ó·s»İ­nºŞ²z­ûÅv­­¡A¬O§_¥HºŞ²z­û¨­¥÷­«·s±Ò°Ê¨Ã§ó·s¡H", "Åv­­¤£¨¬", MB_YESNO | MB_ICONSHIELD);
+        int result = MessageBox(NULL, "æ›´æ–°éœ€è¦ç®¡ç†å“¡æ¬Šé™ï¼Œæ˜¯å¦ä»¥ç®¡ç†å“¡èº«ä»½é‡æ–°å•Ÿå‹•ä¸¦æ›´æ–°ï¼Ÿ", "æ¬Šé™ä¸è¶³", MB_YESNO | MB_ICONSHIELD);
         if (result == IDYES) {
-            // ¨Ï¥Î "runas" Ä²µo UAC ´£¤ÉÅv­­­«·s±Ò°Ê¦Û¤v
+            // ä½¿ç”¨ "runas" è§¸ç™¼ UAC æå‡æ¬Šé™é‡æ–°å•Ÿå‹•è‡ªå·±
             if ((INT_PTR)ShellExecute(NULL, "runas", currentExe, NULL, NULL, SW_SHOWNORMAL) > 32) {
                 ExitProcess(0);
             }
         }
-        return; // ¨Ï¥ÎªÌ¿ï§_©Î±Ò°Ê¥¢±Ñ«h¨ú®ø§ó·s
+        return; // ä½¿ç”¨è€…é¸å¦æˆ–å•Ÿå‹•å¤±æ•—å‰‡å–æ¶ˆæ›´æ–°
     } else {
         fclose(testFile);
-        remove(testFilePath); // ´ú¸Õ¦¨¥\«á§R°£
+        remove(testFilePath); // æ¸¬è©¦æˆåŠŸå¾Œåˆªé™¤
     }
 
-    // --- 2. ¤U¸ü¬yµ{ ---
+    // --- 2. ä¸‹è¼‰æµç¨‹ ---
     GetTempPath(MAX_PATH, tempPath); 
     sprintf(newExePath, "%sMCNP_Update_Temp.exe", tempPath); 
     sprintf(batPath, "%supdate_mcnp.bat", tempPath); 
@@ -217,22 +217,22 @@ void PerformUpdate(const char* downloadUrl)
     HRESULT hr = URLDownloadToFile(NULL, downloadUrl, newExePath, 0, NULL); 
 
     if (FAILED(hr)) { 
-        MessageBox(NULL, "¤U¸ü¥¢±Ñ¡A½ĞÀË¬dºô¸ô³s½u©Î¤â°Ê§ó·s¡C", "¿ù»~", MB_ICONERROR); 
+        MessageBox(NULL, "ä¸‹è¼‰å¤±æ•—ï¼Œè«‹æª¢æŸ¥ç¶²è·¯é€£ç·šæˆ–æ‰‹å‹•æ›´æ–°ã€‚", "éŒ¯èª¤", MB_ICONERROR); 
         return; 
     } 
 
-    // --- 3. «Ø¥ß¦Û·´¦¡§ó·s¸}¥» ---
+    // --- 3. å»ºç«‹è‡ªæ¯€å¼æ›´æ–°è…³æœ¬ ---
     FILE* f = fopen(batPath, "w"); 
     if (!f) { 
-        MessageBox(NULL, "µLªk«Ø¥ßÁ{®É«ü¥O¸}¥»¡C", "¿ù»~", MB_ICONERROR); 
+        MessageBox(NULL, "ç„¡æ³•å»ºç«‹è‡¨æ™‚æŒ‡ä»¤è…³æœ¬ã€‚", "éŒ¯èª¤", MB_ICONERROR); 
         return; 
     } 
 
-    // ¸}¥»ÅŞ¿è¡GµL­­´`Àôª½¨ìÂÂª©³Q§R°£ -> ²¾°Ê·sª©ÂĞ»\ÂÂª© -> ±Ò°Ê·sª© -> §R°£¸}¥»¦Û¤v
+    // è…³æœ¬é‚è¼¯ï¼šç„¡é™å¾ªç’°ç›´åˆ°èˆŠç‰ˆè¢«åˆªé™¤ -> ç§»å‹•æ–°ç‰ˆè¦†è“‹èˆŠç‰ˆ -> å•Ÿå‹•æ–°ç‰ˆ -> åˆªé™¤è…³æœ¬è‡ªå·±
     fprintf(f, 
         "@echo off\n" 
         "title MCNP Updater\n"
-        "echo ¥¿¦bµ¥«İµ{¦¡Ãö³¬¨Ã®M¥Î§ó·s...\n" 
+        "echo æ­£åœ¨ç­‰å¾…ç¨‹å¼é—œé–‰ä¸¦å¥—ç”¨æ›´æ–°...\n" 
         ":loop\n" 
         "del \"%s\" >nul 2>&1\n" 
         "if exist \"%s\" (\n" 
@@ -241,7 +241,7 @@ void PerformUpdate(const char* downloadUrl)
         ")\n" 
         "move /Y \"%s\" \"%s\" >nul\n" 
         "start \"\" \"%s\"\n" 
-        "del \"%%~f0\" & exit\n", // ³o¸Ì¨Ï¥Î & exit ½T«O«ü¥O°õ¦æ§¹¥ß§YÃö³¬
+        "del \"%%~f0\" & exit\n", // é€™è£¡ä½¿ç”¨ & exit ç¢ºä¿æŒ‡ä»¤åŸ·è¡Œå®Œç«‹å³é—œé–‰
         currentExe, 
         currentExe, 
         newExePath, 
@@ -250,18 +250,18 @@ void PerformUpdate(const char* downloadUrl)
     ); 
     fclose(f); 
 
-    // --- 4. °õ¦æ§ó·s ---
-    // ¨Ï¥Î SW_HIDE Åı¨Ï¥ÎªÌ¬İ¤£¨ì¶Â¦âµøµ¡°{¹L
+    // --- 4. åŸ·è¡Œæ›´æ–° ---
+    // ä½¿ç”¨ SW_HIDE è®“ä½¿ç”¨è€…çœ‹ä¸åˆ°é»‘è‰²è¦–çª—é–ƒé
     ShellExecute(NULL, "open", batPath, NULL, NULL, SW_HIDE); 
 
     ExitProcess(0); 
 }
 
 /**
- * ª©¥»ÀË¬d
+ * ç‰ˆæœ¬æª¢æŸ¥
  */
 /**
- * ª©¥»ÀË¬d (»y¸q¤Æª©¥»¤ñ¹ïª©)
+ * ç‰ˆæœ¬æª¢æŸ¥ (èªç¾©åŒ–ç‰ˆæœ¬æ¯”å°ç‰ˆ)
  */
 void CheckForUpdates()
 {
@@ -304,7 +304,7 @@ void CheckForUpdates()
     }
 
     remoteVersion[bytesRead] = '\0';
-    remoteVersion[strcspn(remoteVersion, "\r\n")] = 0; // ¥h°£´«¦æ
+    remoteVersion[strcspn(remoteVersion, "\r\n")] = 0; // å»é™¤æ›è¡Œ
 
     if (strlen(remoteVersion) == 0) {
         printf("Invalid version data.\n");
@@ -316,17 +316,17 @@ void CheckForUpdates()
     printf("Remote version: %s\n", remoteVersion);
     printf("Current version: %s\n", CURRENT_VERSION);
 
-    // --- ·sªºª©¥»¤ñ¸ûÅŞ¿è ---
-    int r_major = 0, r_minor = 0, r_patch = 0; // ¹w³]¬° 0
+    // --- æ–°çš„ç‰ˆæœ¬æ¯”è¼ƒé‚è¼¯ ---
+    int r_major = 0, r_minor = 0, r_patch = 0; // é è¨­ç‚º 0
     int c_major = 0, c_minor = 0, c_patch = 0;
 
-    // ¸ÑªR¦r¦ê (°²³]®æ¦¡¬° v2.7.1 ©Î 2.7.1)
-    // %*[^0-9] ·N«ä¬O¸õ¹L¶}ÀY©Ò¦³«D¼Æ¦rªº¦r¤¸(¨Ò¦p 'v')
+    // è§£æå­—ä¸² (å‡è¨­æ ¼å¼ç‚º v2.7.1 æˆ– 2.7.1)
+    // %*[^0-9] æ„æ€æ˜¯è·³éé–‹é ­æ‰€æœ‰éæ•¸å­—çš„å­—å…ƒ(ä¾‹å¦‚ 'v')
     int r_count = sscanf(remoteVersion, "%*[^0-9]%d.%d.%d", &r_major, &r_minor, &r_patch);
     int c_count = sscanf(CURRENT_VERSION, "%*[^0-9]%d.%d.%d", &c_major, &c_minor, &c_patch);
 
     BOOL hasUpdate = FALSE;
-    if (r_count >= 2 && c_count >= 2) { // ¦Ü¤Ö­n¦³ Major.Minor ¤~¯à¤ñ¸û
+    if (r_count >= 2 && c_count >= 2) { // è‡³å°‘è¦æœ‰ Major.Minor æ‰èƒ½æ¯”è¼ƒ
         if (r_major > c_major) {
             hasUpdate = TRUE;
         } else if (r_major == c_major) {
@@ -344,13 +344,13 @@ void CheckForUpdates()
     {
         char msg[256];
         sprintf(msg,
-                "°»´ú¨ì·sª©¥»¡G%s\n¥Ø«eª©¥»¡G%s\n¬O§_¥ß§Y¤U¸ü¨Ã§ó·s¡H",
+                "åµæ¸¬åˆ°æ–°ç‰ˆæœ¬ï¼š%s\nç›®å‰ç‰ˆæœ¬ï¼š%s\næ˜¯å¦ç«‹å³ä¸‹è¼‰ä¸¦æ›´æ–°ï¼Ÿ",
                 remoteVersion,
                 CURRENT_VERSION);
 
         int result = MessageBox(NULL,
                                 msg,
-                                "µo²{§ó·s",
+                                "ç™¼ç¾æ›´æ–°",
                                 MB_YESNO | MB_ICONQUESTION | MB_TOPMOST);
 
         if (result == IDYES)
