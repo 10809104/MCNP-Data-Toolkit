@@ -219,6 +219,7 @@ void ExecuteBatchProcess(HWND hwnd) {
         for (int j = 0; j < total_o_files; j++) {
             char full_path[512];
             snprintf(full_path, sizeof(full_path), "%s\\%s", folder, myFiles[j]);
+            logMessage(LOG_INFO, "INFO", "Processing file [%d/%d]: %s", j + 1, total_o_files, myFiles[j]);
             if (loadSingleFileData(full_path, &(myData->tables[j]), 
                                    file_info.particles, file_info.tally_count, 
                                    file_info.label_count, file_info.labels) != 0) {
@@ -289,6 +290,7 @@ void ExecuteBatchProcess(HWND hwnd) {
 	    } else {
 	        // 使用者點了「萬歲！」
 	        logMessage(LOG_SUCCESS, "SYSTEM", "使用者順利畢業，恭喜脫離苦海！");
+	        MessageBox(hwnd, "ya~( °▽°)/自由了\n\n程式已正常結束。\nreturn 0;", "wow 沒有閃退欸", MB_OK);
 	    }
 	}
 }

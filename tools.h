@@ -547,6 +547,6 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
     }
 
     fclose(fp);
-    printf(" >> The report has been generated successfully. The number of data rows is %d.\n", max_rows);
+    printf(" >> 報告產出完成，檔案最多有 %d 筆數據\n", max_rows);
     return 0;
 }
