@@ -14,7 +14,7 @@
 #define MB_ICONSHIELD 0x0000004CL
 #endif
 // ª©¥»¥Ø¼Ð
-#define CURRENT_VERSION "v2.7.2"
+#define CURRENT_VERSION "v2.7.3"
 #define VERSION_URL "https://raw.githubusercontent.com/10809104/MCNP-Data-Toolkit/main/version.txt"
 #define EXE_URL "https://github.com/10809104/MCNP-Data-Toolkit/releases/latest/download/MCNP_Tool.exe"
 
@@ -368,4 +368,3 @@ void CheckForUpdates()
     InternetCloseHandle(hConnect);
     InternetCloseHandle(hInternet);
 }
-/* [] END OF FILE */

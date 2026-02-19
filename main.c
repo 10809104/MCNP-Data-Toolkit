@@ -5,7 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <shellapi.h>
+#include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <commdlg.h>
 #include <time.h>
 
@@ -386,7 +388,7 @@ int main() {
     setColor(LOG_INFO);
     printf(" __________________________________________________________ \n");
     printf("|                                                          |\n");
-    printf("|         M C N P   D A T A   T O O L K I T   v2.7.2       |\n");
+    printf("|         M C N P   D A T A   T O O L K I T   v2.7.3       |\n");
     printf("|__________________________________________________________|\n\n");
     setColor(LOG_NORMAL);
 	
@@ -420,11 +422,11 @@ int main() {
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpszClassName = "MCNPDevToolkit";
+    wc.lpszClassName = "MCNPDataToolkit";
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindow("MCNPDevToolkit", "MCNP 數據整合工具", 
+    HWND hwnd = CreateWindow("MCNPDataToolkit", "MCNP 數據整合工具", 
                              WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE, 
                              (GetSystemMetrics(SM_CXSCREEN)-300)/2, (GetSystemMetrics(SM_CYSCREEN)-300)/2, 
                              300, 300, NULL, NULL, hInstance, NULL);
@@ -462,4 +464,4 @@ int main() {
     FreeConsole();
     return 0;
 }
-/* [] END OF FILE */
+

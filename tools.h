@@ -250,10 +250,76 @@ FileInfo get_file_info(const char *path) {
 }
 
 /**
+ * @Natural Compare（逐段比對核心）
+ 不把數字轉成整數，而是：
+
+連續數字視為一段
+
+先比長度（避免 overflow）
+
+再比字典序
+ */
+static int natural_compare(const char *a, const char *b)
+{
+    while (*a && *b) {
+
+        /* 如果兩邊都是數字 → 進入數字段比較 */
+        if (isdigit((unsigned char)*a) && isdigit((unsigned char)*b)) {
+
+            const char *startA = a;
+            const char *startB = b;
+
+            /* 跳過前導 0 */
+            while (*a == '0') a++;
+            while (*b == '0') b++;
+
+            const char *numA = a;
+            const char *numB = b;
+
+            while (isdigit((unsigned char)*a)) a++;
+            while (isdigit((unsigned char)*b)) b++;
+
+            size_t lenA = a - numA;
+            size_t lenB = b - numB;
+
+            /* 先比數字長度（數值大小） */
+            if (lenA != lenB)
+                return (lenA < lenB) ? -1 : 1;
+
+            /* 長度相同 → 逐字比 */
+            int cmp = strncmp(numA, numB, lenA);
+            if (cmp != 0)
+                return cmp;
+
+            /* 數字相等 → 比原始數字段長度（避免 01 == 1 問題） */
+            size_t fullLenA = a - startA;
+            size_t fullLenB = b - startB;
+
+            if (fullLenA != fullLenB)
+                return (fullLenA < fullLenB) ? -1 : 1;
+
+        } else {
+            /* 非數字 → 正常字元比較 */
+            if (*a != *b)
+                return (unsigned char)*a - (unsigned char)*b;
+
+            a++;
+            b++;
+        }
+    }
+
+    /* 比長度 */
+    return (unsigned char)*a - (unsigned char)*b;
+}
+
+/**
  * @brief 檔名排序用的比較函數 (qsort 呼叫)
  */
-int compareNames(const void *a, const void *b) {
-    return strcmp(*(const char **)a, *(const char **)b);
+static int compareNames(const void *a, const void *b)
+{
+    const char * const *pa = a;
+    const char * const *pb = b;
+    return natural_compare(*pa, *pb);
 }
 
 /**
@@ -273,59 +339,79 @@ void cleanup_list(char **list, int count) {
  * @param list_ptr  回傳檔案清單指標的地址
  * @return int      找到的檔案總數，失敗返回 -1
  */
-int get_sorted_o_files(const char *path, char ***list_ptr) {
+int get_sorted_o_files(const char *path, char ***list_ptr)
+{
+    if (!path || !list_ptr) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    *list_ptr = NULL;
+
     DIR *dir = opendir(path);
     if (!dir) {
-        perror("無法開啟資料夾");
         return -1;
     }
 
     int count = 0;
-    int capacity = 25; // 初始分配空間
-    char **fileList = malloc(capacity * sizeof(char *));
+    int capacity = 16;
+
+    char **fileList = malloc(capacity * sizeof(*fileList));
     if (!fileList) {
-        perror("無法分配檔案列表記憶體");
         closedir(dir);
         return -1;
     }
 
     struct dirent *ent;
     while ((ent = readdir(dir)) != NULL) {
-        char *ext = strrchr(ent->d_name, '.');
-        
-        // 只篩選字尾為 .o 的檔案
-        if (ext && strcmp(ext, ".o") == 0) {
-            // 動態擴展陣列容量
-            if (count >= capacity) {
-                capacity *= 2;
-                // --- 記憶體檢查 : realloc 擴展容量 ---
-                char **tempList = realloc(fileList, capacity * sizeof(char *));
-                if (!tempList) {
-                    closedir(dir);
-                    cleanup_list(fileList, count);
-                    return -1;
-                }
-                fileList = tempList;
+
+        /* 過濾 .o */
+        const char *ext = strrchr(ent->d_name, '.');
+        if (!ext || strcmp(ext, ".o") != 0)
+            continue;
+
+        /* 擴容 */
+        if (count == capacity) {
+            int new_capacity = capacity * 2;
+
+            if (new_capacity < capacity) {  // overflow guard
+                cleanup_list(fileList, count);
+                closedir(dir);
+                errno = ENOMEM;
+                return -1;
             }
-            char *tmp = strdup(ent->d_name);
+
+            char **tmp = realloc(fileList, new_capacity * sizeof(*tmp));
             if (!tmp) {
-			    closedir(dir);
-			    cleanup_list(fileList, count);
-			    return -1;
-			}
-			fileList[count++] = tmp;
+                cleanup_list(fileList, count);
+                closedir(dir);
+                return -1;
+            }
+
+            fileList = tmp;
+            capacity = new_capacity;
         }
+
+        fileList[count] = strdup(ent->d_name);
+        if (!fileList[count]) {
+            cleanup_list(fileList, count);
+            closedir(dir);
+            return -1;
+        }
+
+        count++;
     }
+
     closedir(dir);
 
-    // 進行字母順序排序
-    if (count > 0) {
-        qsort(fileList, count, sizeof(char *), compareNames);
+    if (count > 1) {
+        qsort(fileList, count, sizeof(*fileList), compareNames);
     }
 
-    *list_ptr = fileList; 
+    *list_ptr = fileList;
     return count;
 }
+
 
 /**
  * @brief 從單一輸出檔載入特定粒子數下的數據
@@ -550,4 +636,3 @@ int exportFinalReport(const char* folder, DynamicTable* origin, TableSet* myData
     printf(" >> 報告產出完成，檔案最多有 %d 筆數據\n", max_rows);
     return 0;
 }
-/* [] END OF FILE */
