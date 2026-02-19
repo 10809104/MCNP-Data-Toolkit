@@ -1,4 +1,4 @@
-# MCNP Data Toolkit v2.7.2
+# MCNP Data Toolkit v2.7.3
 
 **MCNP Data Toolkit** 是一款專為核能與醫學物理工程研究設計的高效能數據整合工具。它能將 MCNP 模擬產生的海量文字輸出檔案（`.o` 檔）轉化為結構化的科研報表。透過 C 語言的強大解析能力與 PowerShell 的 Excel 自動化技術，大幅縮短數據整理時間。
 
@@ -104,9 +104,9 @@
 1. **路徑檢查**：確保執行路徑中不包含特殊字元，以維持 PowerShell 腳本的穩定性。
 2. **Excel 進程**：若腳本執行中斷，請檢查工作管理員中是否有殘留的 Excel 進程。
 
-SORRY,I cannot distinguish between MRCP and MCNP before v2.7.2.
+SORRY,I cannot distinguish between MRCP and MCNP before v2.7.3.
 
-抱歉v2.7.2之前還分不清MRCP跟MCNP
+抱歉v2.7.3之前還分不清MRCP跟MCNP
 
 **Oh my, it's quite a struggle to convert everything to UTF-8. Please excuse any garbled characters that may appear.**
 
