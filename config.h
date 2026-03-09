@@ -14,9 +14,10 @@
 #define MB_ICONSHIELD 0x0000004CL
 #endif
 // 版本目標
-#define CURRENT_VERSION "v2.7.3"
-#define VERSION_URL "https://raw.githubusercontent.com/10809104/MCNP-Data-Toolkit/main/version.txt"
-#define EXE_URL "https://github.com/10809104/MCNP-Data-Toolkit/releases/latest/download/MCNP_Tool.exe"
+#define CURRENT_VERSION "v3.0.0"
+#define VERSION_URL "https://raw.githubusercontent.com/10809104/MCNP-Automation-Toolkit/main/Parser/version.txt"
+#define EXE_URL "https://github.com/10809104/MCNP-Automation-Toolkit/releases/latest/download/MCNP_Parser.exe"
+#define LATEST_RELEASE_URL "https://github.com/10809104/MCNP-Automation-Toolkit/releases/latest"
 
 /* ================= 資料結構 ================= */
 // 定義資料型別枚舉，用來標記 Cell 目前儲存的是哪種資料
@@ -217,9 +218,25 @@ void PerformUpdate(const char* downloadUrl)
     HRESULT hr = URLDownloadToFile(NULL, downloadUrl, newExePath, 0, NULL); 
 
     if (FAILED(hr)) { 
-        MessageBox(NULL, "下載失敗，請檢查網路連線或手動更新。", "錯誤", MB_ICONERROR); 
-        return; 
-    } 
+	    int result = MessageBox(NULL, 
+	        "下載失敗，請檢查網路連線或手動更新。\n\n"
+	        "是否前往最新版本下載頁面？\n"
+	        LATEST_RELEASE_URL, // C 語言會自動將前後字串接在一起
+	        "錯誤", 
+	        MB_ICONERROR | MB_YESNO | MB_DEFBUTTON2);
+	
+	    if (result == IDYES) {
+	        ShellExecute(
+	            NULL,
+	            "open",
+	            LATEST_RELEASE_URL, // 這裡直接使用 define
+	            NULL,
+	            NULL,
+	            SW_SHOWNORMAL
+	        );
+	    }
+	    return; 
+	}
 
     // --- 3. 建立自毀式更新腳本 ---
     FILE* f = fopen(batPath, "w"); 

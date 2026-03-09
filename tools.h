@@ -313,13 +313,48 @@ static int natural_compare(const char *a, const char *b)
 }
 
 /**
+ * @Numeric Compare
+ * 當遇到數字時，嘗試以浮點數(double)進行解析並比較。
+ */
+static int numeric_compare(const char *a, const char *b)
+{
+    while (*a && *b) {
+        // 如果目前字元是數字，或是小數點後面接數字（處理 .5 這種情況）
+        if (isdigit((unsigned char)*a) || (*a == '.' && isdigit((unsigned char)*(a + 1)))) {
+            char *endA, *endB;
+            
+            // 將字串中的數字部分轉換為 double
+            double valA = strtod(a, &endA);
+            double valB = strtod(b, &endB);
+
+            if (valA != valB) {
+                return (valA < valB) ? -1 : 1;
+            }
+
+            // 如果數值相等（例如 1.00 與 1.0），則跳過已處理的數字部分繼續比對
+            a = endA;
+            b = endB;
+        } else {
+            // 一般字元比較
+            if (*a != *b) {
+                return (unsigned char)*a - (unsigned char)*b;
+            }
+            a++;
+            b++;
+        }
+    }
+
+    return (unsigned char)*a - (unsigned char)*b;
+}
+
+/**
  * @brief 檔名排序用的比較函數 (qsort 呼叫)
  */
 static int compareNames(const void *a, const void *b)
 {
     const char * const *pa = a;
     const char * const *pb = b;
-    return natural_compare(*pa, *pb);
+    return numeric_compare(*pa, *pb);
 }
 
 /**

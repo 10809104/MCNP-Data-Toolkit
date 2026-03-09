@@ -388,7 +388,7 @@ int main() {
     setColor(LOG_INFO);
     printf(" __________________________________________________________ \n");
     printf("|                                                          |\n");
-    printf("|         M C N P   D A T A   T O O L K I T   v2.7.3       |\n");
+    printf("|         M C N P   D A T A   T O O L K I T   v3.0.0       |\n");
     printf("|__________________________________________________________|\n\n");
     setColor(LOG_NORMAL);
 	
