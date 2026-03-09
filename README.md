@@ -1,4 +1,8 @@
-# MCNP Data Toolkit v2.7.3
+# MCNP Data Toolkit v3.0.0
+
+**這個Data Toolkit將停止更新，請前往Automation Toolkit**
+
+[點我](https://github.com/10809104/MCNP-Automation-Toolkit)
 
 **MCNP Data Toolkit** 是一款專為核能與醫學物理工程研究設計的高效能數據整合工具。它能將 MCNP 模擬產生的海量文字輸出檔案（`.o` 檔）轉化為結構化的科研報表。透過 C 語言的強大解析能力與 PowerShell 的 Excel 自動化技術，大幅縮短數據整理時間。
 
